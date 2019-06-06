@@ -11,8 +11,8 @@
 
 ---client:send("Hello")
 
-boardlib = require "board"
-
+local boardlib = require "board"
+local widget = require "widget"
 local halfH = display.contentHeight * 0.5
 local halfW = display.contentWidth * 0.5
 center = {halfW, halfH}
@@ -21,8 +21,33 @@ center = {halfW, halfH}
 
 --bkg.x = halfW
 --bkg.y = halfH
-
-
+local function roll( event )
+    local filename = "dice"
+    local extension = ".png"
+    if ( "ended" == event.phase ) then
+        diea=math.random(1,6)
+        dieb=math.random(1,6)
+        local rolleda = display.newImageRect(filename..diea..extension,50,50)
+        rolleda.x, rolleda.y = 50, 125
+        local rolledb = display.newImageRect(filename..dieb..extension,50,50)
+        rolledb.x, rolledb.y = 100, 125
+        print("rolled")
+    end
+    return diea, dieb
+end
+ 
+-- Create the widget
+local rolldice = widget.newButton(
+    {
+        width = 150,
+        height = 20,
+        defaultFile = "rollbutton.png",
+        id = "rolldice",
+        label = "Lanzar dados",
+        labelColor = { default={ 1, 1, 1, 1 }, over={ .2, .2, .2,.2} },
+        onEvent = roll
+    }
+)
 
 
 skypos = boardlib.toScreen({0,-70},center)
@@ -68,4 +93,7 @@ homeblue:setFillColor(.61,0,0.59)
 homegreen:setFillColor(.61,0,0.59)
 homeyellow:setFillColor(.61,0,0.59)
 
+
 red, green, blue, yellow = boardlib.drawboard()
+rolldice.x = 93
+rolldice.y = halfH *2 -15

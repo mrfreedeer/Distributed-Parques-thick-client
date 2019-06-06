@@ -214,7 +214,7 @@ function board.drawboard()
 			screenpos = board.toScreen({posx, posy}, center)
 			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
-			if i == 3 then
+			if i == 6 then
 				f:setStrokeColor(0,0,0)
 				f:setFillColor(.2,.2,.2)
 			else
