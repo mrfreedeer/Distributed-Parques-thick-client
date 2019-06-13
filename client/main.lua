@@ -17,10 +17,42 @@ local halfH = display.contentHeight * 0.5
 local halfW = display.contentWidth * 0.5
 center = {halfW, halfH}
 
+player = display.newCircle(0,0, 5)
+player.out = false
+player.pos = 13
+player.name ="lolita"
 --local bkg = display.newImageRect("BioshockInf.jpg", halfW*2,halfH*2)
 
 --bkg.x = halfW
 --bkg.y = halfH
+local function exitprison(player)
+
+    print(player.name, " exitedprison")
+    player.out = true
+    player.x = globalboard[13].x
+    player.y = globalboard[13].y
+end
+
+local function possibleMoves(player, diea, dieb)
+    total = diea + dieb
+
+    globalboard[player.pos+total]:setFillColor(.35,.2,.86)
+    player.rolled = true
+    player.validmoves = {player.pos + total}
+end
+
+ function player:move(event)
+    if event.ended and player.rolled then
+        print("player dropped")
+        for i, cell in ipairs(player.validmoves) do 
+            if (cell.x == event.other.x and cell.y == event.other.y) then
+                player.x = cell.x
+                player.y = cell.y
+            end
+        end
+    end
+end 
+
 local function roll( event )
     local filename = "dice"
     local extension = ".png"
@@ -33,7 +65,12 @@ local function roll( event )
         rolledb.x, rolledb.y = 100, 125
         print("rolled")
     end
-    return diea, dieb
+    if (diea == dieb and diea ~= nil and not player.out) then
+        exitprison(player)
+    end
+    if (player.out) then
+        possibleMoves(player,diea,dieb)
+    end
 end
  
 -- Create the widget
@@ -48,6 +85,7 @@ local rolldice = widget.newButton(
         onEvent = roll
     }
 )
+
 
 
 skypos = boardlib.toScreen({0,-70},center)
@@ -94,6 +132,12 @@ homegreen:setFillColor(.61,0,0.59)
 homeyellow:setFillColor(.61,0,0.59)
 
 
-red, green, blue, yellow = boardlib.drawboard()
+globalboard, redlimit, yellowlimit, bluelimit, greenlimit = boardlib.drawboard()
 rolldice.x = 93
 rolldice.y = halfH *2 -15
+
+
+player:addEventListener( "move", player)
+player.x = homeredpos[1]+10
+player.y = homeredpos[2]
+player:toFront()
