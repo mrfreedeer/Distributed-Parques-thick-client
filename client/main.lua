@@ -15,9 +15,12 @@ local boardlib = require "board"
 local widget = require "widget"
 local halfH = display.contentHeight * 0.5
 local halfW = display.contentWidth * 0.5
+local diea = nil
+local dieb = nil
+local movespeed = 1
 center = {halfW, halfH}
 
-player = display.newCircle(0,0, 5)
+local player = display.newCircle(0,0, 5)
 player.out = false
 player.pos = 13
 player.name ="lolita"
@@ -34,15 +37,26 @@ local function exitprison(player)
 end
 
 local function possibleMoves(player, diea, dieb)
-    total = diea + dieb
+    if player.tapped then
+        total = diea + dieb
 
-    globalboard[player.pos+total]:setFillColor(.35,.2,.86)
-    player.rolled = true
-    player.validmoves = {player.pos + total}
+        globalboard[player.pos+total]:setFillColor(.35,.2,.86)
+        player.validmoves = {player.pos + total}
+    end
 end
 
- function player:move(event)
-    if event.ended and player.rolled then
+ function player:tap(event)
+    player.tapped = true
+    print(player.tapped)
+    if player.out then
+        if player.rolled then
+            possibleMoves(player,diea, dieb)
+        end
+    player.rolled = false
+    end
+    --[[
+    print("ended: ", event.phase, " rolled", player.rolled)
+    if (event.phase == "ended" and player.rolled) then
         print("player dropped")
         for i, cell in ipairs(player.validmoves) do 
             if (cell.x == event.other.x and cell.y == event.other.y) then
@@ -51,11 +65,34 @@ end
             end
         end
     end
+    -]]
 end 
+function movehorizontal(player, tile)
+    transition.moveTo(player, {x = tile.x, 500})
+end
+function tapListener(event)
+    if player.tapped and player.validmoves ~= nil then
+        for i, cell in ipairs(player.validmoves) do
+            tile = globalboard[cell]
+            if (event.target == tile) then
+               transition.moveTo(player, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(player, tile)})
+                player.pos = cell
+            end
+        end
+    end
+    --print (event.x, event.y)
+end
+
+
+
+player:addEventListener( "tap", player)
 
 local function roll( event )
     local filename = "dice"
     local extension = ".png"
+    if player.out then
+        player.rolled = true
+    end
     if ( "ended" == event.phase ) then
         diea=math.random(1,6)
         dieb=math.random(1,6)
@@ -68,9 +105,7 @@ local function roll( event )
     if (diea == dieb and diea ~= nil and not player.out) then
         exitprison(player)
     end
-    if (player.out) then
-        possibleMoves(player,diea,dieb)
-    end
+
 end
  
 -- Create the widget
@@ -136,8 +171,11 @@ globalboard, redlimit, yellowlimit, bluelimit, greenlimit = boardlib.drawboard()
 rolldice.x = 93
 rolldice.y = halfH *2 -15
 
+for i, tile in ipairs(globalboard) do
+    tile:addEventListener("tap", tapListener)
+end
 
-player:addEventListener( "move", player)
+
 player.x = homeredpos[1]+10
 player.y = homeredpos[2]
 player:toFront()
