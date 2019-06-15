@@ -4,7 +4,6 @@
 --
 -----------------------------------------------------------------------------------------
 
--- Your code here
 
 ---local socket = require( "socket")
 ---local client = socket.connect("localhost",8000)
@@ -24,44 +23,74 @@ local yellowlimit = 48
 local bluelimit = 72
 local greenlimit = 96
 local player = display.newCircle(0,0, 5)
+local blackies = {}
 player.out = false
 player.pos = 13
 player.name ="lolita"
 player.colour = "red"
+player.auxlap = false
+player.lap = false
 --local bkg = display.newImageRect("BioshockInf.jpg", halfW*2,halfH*2)
 
 --bkg.x = halfW
 --bkg.y = halfH
-local function exitprison(player)
+local function exitprison(player) --Salir de la prision
 
     print(player.name, " exitedprison")
     player.out = true
-    player.x = globalboard[13].x
-    player.y = globalboard[13].y
+    player.x = globalboard[player.pos].x
+    player.y = globalboard[player.pos].y
 end
 
-local function possibleMoves(player, diea, dieb)
+local function possibleMoves(player, diea, dieb) --Calcula que movidas son posibles hacer
+    if not player.auxlap then
+        boardlib.enablelap(player)
+    end
+    player.auxlap = player.lap
     if player.tapped then
         total = diea + dieb
         print("Validmoves: ")
         if player.pos + total > greenlimit then
             validtotal = player.pos + total - greenlimit
-            validtotal = boardlib.transPlayable(validtotal, player.colour)
+            validtotal = boardlib.transPlayable(validtotal, player.colour, player.lap)
             player.validmoves = {validtotal}
         else
             print("Playerpos: ", player.pos)
-            total = boardlib.transPlayable(player.pos + total, player.colour)
+            total = boardlib.transPlayable(player.pos + total, player.colour, player.lap)
             player.validmoves = {total}
         end
         for i, cell in ipairs(player.validmoves) do
-            print(cell)
+    
             globalboard[cell]:setFillColor(.35,.2,.86)
         end
         print("---------------")
     end
 end
 
- function player:tap(event)
+function restoreColour(player) 
+    for i, cell in ipairs(player.validmoves) do
+        if table.indexOf(blackies, cell) == nil then
+            colour = boardlib.tellColour(cell)
+            print(colour)
+            if colour == "solidred" then
+                globalboard[cell]:setFillColor(1, 0, 0)
+            elseif colour == "solidyellow" then
+                globalboard[cell]:setFillColor(1,1,0)
+            elseif colour == "solidblue" then 
+                globalboard[cell]:setFillColor(0,0,1)
+            elseif colour == "solidgreen" then 
+                globalboard[cell]:setFillColor(0,1,0)
+            else 
+                globalboard[cell]:setFillColor(1,1,1)
+            end 
+        else 
+            globalboard[cell]:setFillColor(.2,.2,.2)
+        end
+
+    end
+end
+
+function player:tap(event)
     player.tapped = true
     if player.out then
         if player.rolled then
@@ -69,18 +98,6 @@ end
         end
     player.rolled = false
     end
-    --[[
-    print("ended: ", event.phase, " rolled", player.rolled)
-    if (event.phase == "ended" and player.rolled) then
-        print("player dropped")
-        for i, cell in ipairs(player.validmoves) do 
-            if (cell.x == event.other.x and cell.y == event.other.y) then
-                player.x = cell.x
-                player.y = cell.y
-            end
-        end
-    end
-    -]]
 end 
 function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
@@ -92,11 +109,14 @@ function tapListener(event)
             if (event.target == tile) then
                transition.moveTo(player, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(player, tile)})
                 player.pos = cell
+                restoreColour(player)
+                return true
             end
         end
     end
-    --print (event.x, event.y)
+    return false
 end
+
 
 
 
@@ -122,7 +142,7 @@ local function roll( event )
 
 end
  
--- Create the widget
+-- Boton creado (Tipo de Widget)
 local rolldice = widget.newButton(
     {
         width = 150,
@@ -180,8 +200,8 @@ homeblue:setFillColor(.61,0,0.59)
 homegreen:setFillColor(.61,0,0.59)
 homeyellow:setFillColor(.61,0,0.59)
 
-
-globalboard = boardlib.drawboard()
+-- Se dibuja el tablero
+globalboard, blackies = boardlib.drawboard()
 rolldice.x = 93
 rolldice.y = halfH *2 -15
 testnum = 0
