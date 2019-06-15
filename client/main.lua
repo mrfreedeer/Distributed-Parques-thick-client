@@ -19,11 +19,15 @@ local diea = nil
 local dieb = nil
 local movespeed = 1
 center = {halfW, halfH}
-
+local redlimit = 24
+local yellowlimit = 48
+local bluelimit = 72
+local greenlimit = 96
 local player = display.newCircle(0,0, 5)
 player.out = false
 player.pos = 13
 player.name ="lolita"
+player.colour = "red"
 --local bkg = display.newImageRect("BioshockInf.jpg", halfW*2,halfH*2)
 
 --bkg.x = halfW
@@ -39,15 +43,26 @@ end
 local function possibleMoves(player, diea, dieb)
     if player.tapped then
         total = diea + dieb
-
-        globalboard[player.pos+total]:setFillColor(.35,.2,.86)
-        player.validmoves = {player.pos + total}
+        print("Validmoves: ")
+        if player.pos + total > greenlimit then
+            validtotal = player.pos + total - greenlimit
+            validtotal = boardlib.transPlayable(validtotal, player.colour)
+            player.validmoves = {validtotal}
+        else
+            print("Playerpos: ", player.pos)
+            total = boardlib.transPlayable(player.pos + total, player.colour)
+            player.validmoves = {total}
+        end
+        for i, cell in ipairs(player.validmoves) do
+            print(cell)
+            globalboard[cell]:setFillColor(.35,.2,.86)
+        end
+        print("---------------")
     end
 end
 
  function player:tap(event)
     player.tapped = true
-    print(player.tapped)
     if player.out then
         if player.rolled then
             possibleMoves(player,diea, dieb)
@@ -100,7 +115,6 @@ local function roll( event )
         rolleda.x, rolleda.y = 50, 125
         local rolledb = display.newImageRect(filename..dieb..extension,50,50)
         rolledb.x, rolledb.y = 100, 125
-        print("rolled")
     end
     if (diea == dieb and diea ~= nil and not player.out) then
         exitprison(player)
@@ -167,14 +181,13 @@ homegreen:setFillColor(.61,0,0.59)
 homeyellow:setFillColor(.61,0,0.59)
 
 
-globalboard, redlimit, yellowlimit, bluelimit, greenlimit = boardlib.drawboard()
+globalboard = boardlib.drawboard()
 rolldice.x = 93
 rolldice.y = halfH *2 -15
-
+testnum = 0
 for i, tile in ipairs(globalboard) do
     tile:addEventListener("tap", tapListener)
 end
-
 
 player.x = homeredpos[1]+10
 player.y = homeredpos[2]

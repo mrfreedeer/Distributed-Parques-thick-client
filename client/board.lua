@@ -11,6 +11,40 @@ function board.toCart(coords, center)
 	return {cx,cy}
 end
 
+function board.transPlayable(pos, colour)
+	print("POS: ", pos)
+	if colour == "red" then
+		print("trans",(pos>=25 and pos <=32) or (pos>=49 and pos <=56) or (pos>= 73 and pos <= 80))
+		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
+			return pos + 7
+		else
+			return pos
+		end
+	end	
+	if colour == "yellow" then
+		if (pos>=1 and pos <=8) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
+			return pos + 7
+		else
+			return pos
+		end
+	end	
+	if colour == "blue" then
+		if (pos>=26 and pos <=32) or (pos>=1 and pos <=8) or (pos>= 74 and pos <= 80)	then
+			return pos + 7
+		else
+			return pos
+		end
+	end	
+	if colour == "green" then
+		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 1 and pos <= 80)	then
+			return pos + 7
+		else
+			return pos
+		end
+	end	
+	return pos
+end
+
 function board.drawboard()
 		global =  {}
 		posx = 0 
@@ -21,8 +55,6 @@ function board.drawboard()
 			screenpos = board.toScreen({posx, posy}, center)
 			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
-			f.number = num
-			num = num + 1
 			f.number = num
 			num = num + 1
 			if i == 1 then
@@ -194,8 +226,9 @@ function board.drawboard()
 		end
 		bluelimit = num - 1
 		--Aqui empiezan las verdes
-
+		--print("Green", bluelimit)
 		posx = posx + diff
+		refx = posx 
 		posy = posy + 42
 		for i=1, 8 do
 			screenpos = board.toScreen({posx, posy}, center)
@@ -213,8 +246,9 @@ function board.drawboard()
 			table.insert(global, f)
 			posx = posx + diff
 		end
-		refx = posx
-		posx = posx + 36
+		temprefx = posx
+		posx = refx
+		refx = temprefx
 		posy = posy + 42
 		for i=1, 6 do
 			screenpos = board.toScreen({posx, posy}, center)
@@ -222,7 +256,7 @@ function board.drawboard()
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
-			if i == 3 then
+			if i == 4 then
 				f:setStrokeColor(0,0,0)
 				f:setFillColor(.2,.2,.2)
 			else
@@ -230,7 +264,7 @@ function board.drawboard()
 				f:setFillColor(1,1,1)
 			end
 			table.insert(global, f)
-			posx = posx - diff
+			posx = posx + diff
 		end
 		posx = refx + 9
 		posy = posy - 15
@@ -252,7 +286,7 @@ function board.drawboard()
 			posy = posy - diff
 		end
 		greenlimit = num - 1
-		return global, redlimit, yellowlimit, bluelimit, greenlimit
+		return global
 end
 
 return board
