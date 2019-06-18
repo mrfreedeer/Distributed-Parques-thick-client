@@ -72,37 +72,32 @@ end
 
 
 
-local function possibleMoves(player, diea, dieb) --Calcula que movidas son posibles hacer
-    if not player.auxlap then
-        boardlib.enablelap(player)
+local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posibles hacer
+    if not pawn.auxlap then
+        boardlib.enablelap(pawn)
     end
-    player.auxlap = player.lap
-    print("tapped", player.tapped)
-    if player.tapped then
+    pawn.auxlap = pawn.lap
+    if pawn.tapped then
         total = diea + dieb
-        print("Validmoves: ")
-        if player.pos + total > greenlimit then
-            validtotal = player.pos + total - greenlimit
-            validtotal = boardlib.transPlayable(validtotal, player.colour, player.lap)
-            player.validmoves = {validtotal}
+        if pawn.pos + total > greenlimit then
+            validtotal = pawn.pos + total - greenlimit
+            validtotal = boardlib.transPlayable(validtotal, pawn.colour, pawn.lap)
+            pawn.validmoves = {validtotal}
         else
-            print("Playerpos: ", player.pos)
-            total = boardlib.transPlayable(player.pos + total, player.colour, player.lap)
-            player.validmoves = {total}
+            total = boardlib.transPlayable(pawn.pos + total, pawn.colour, pawn.lap)
+            pawn.validmoves = {total}
         end
-        for i, cell in ipairs(player.validmoves) do
+        for i, cell in ipairs(pawn.validmoves) do
     
             globalboard[cell]:setFillColor(.35,.2,.86)
         end
-        print("---------------")
     end
 end
 
-function restoreColour(player) 
-    for i, cell in ipairs(player.validmoves) do
+function restoreColour(pawn) 
+    for i, cell in ipairs(pawn.validmoves) do
         if table.indexOf(blackies, cell) == nil then
             colour = boardlib.tellColour(cell)
-            print(colour)
             if colour == "solidred" then
                 globalboard[cell]:setFillColor(1, 0, 0)
             elseif colour == "solidyellow" then
@@ -129,6 +124,7 @@ function playertap(event)
     if tappedplayer.out then
         if player.rolled then
             possibleMoves(tappedplayer,diea, dieb)
+            print("Pawn moves: ", tappedplayer.validmoves)
         end
     player.rolled = false
     end
@@ -137,14 +133,16 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
-    if player.tappedpawn.tapped and player.validmoves ~= nil then
-        for i, cell in ipairs(player.validmoves) do
+    pawn = player.tappedpawn 
+    print("Pawn valid moves:", pawn.validmoves)
+    if pawn.tapped and pawn.validmoves ~= nil then
+        for i, cell in ipairs(pawn.validmoves) do
             tile = globalboard[cell]
             if (event.target == tile) then
-               transition.moveTo(player.tappedpawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(player, tile)})
-                player.tappedpawn.pos = cell
-                restoreColour(player.tappedpawn)
-                player.tappedpawn.tapped = false
+               transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+                pawn.pos = cell
+                restoreColour(pawn)
+                pawn.tapped = false
                 return true
             end
         end
