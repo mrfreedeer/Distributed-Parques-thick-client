@@ -22,14 +22,39 @@ local redlimit = 24
 local yellowlimit = 48
 local bluelimit = 72
 local greenlimit = 96
-local player = display.newCircle(0,0, 5)
+local player = {}
 local blackies = {}
-player.out = false
-player.pos = 13
 player.name ="lolita"
+player.out = false
 player.colour = "red"
-player.auxlap = false
-player.lap = false
+player.rolled = false
+
+function createplayer(player)
+    for i=1,4 do
+       circle = display.newCircle(0,0,5)
+       circle.out = false
+       circle.auxlap = false
+       circle.lap = false
+       circle.colour = player.colour
+       if player.colour == "red" then
+        circle.pos = 13
+        circle:setFillColor(1,0,0)
+        elseif circle.colour == "yellow" then 
+            circle:setFillColor(1,1,0)
+        elseif circle.colour == "blue" then
+            circle:setFillColor(0,0,1)
+        elseif circle.colour == "green" then
+            circle:setFillColor(0,1,0)
+        end
+        circle:setStrokeColor(.2,.2,.2)
+        circle.strokeWidth = 1
+        table.insert(player,circle)
+    end
+end
+
+createplayer(player)
+
+
 --local bkg = display.newImageRect("BioshockInf.jpg", halfW*2,halfH*2)
 
 --bkg.x = halfW
@@ -38,40 +63,41 @@ local function exitprison(player) --Salir de la prision
 
     print(player.name, " exitedprison")
     player.out = true
-    player.x = globalboard[player.pos].x
-    player.y = globalboard[player.pos].y
+    for i, pawn in ipairs(player) do
+        pawn.out = true
+        pawn.x = globalboard[pawn.pos].x
+        pawn.y = globalboard[pawn.pos].y
+    end 
 end
 
-local function possibleMoves(player, diea, dieb) --Calcula que movidas son posibles hacer
-    if not player.auxlap then
-        boardlib.enablelap(player)
+
+
+local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posibles hacer
+    if not pawn.auxlap then
+        boardlib.enablelap(pawn)
     end
-    player.auxlap = player.lap
-    if player.tapped then
+    pawn.auxlap = pawn.lap
+    if pawn.tapped then
         total = diea + dieb
-        print("Validmoves: ")
-        if player.pos + total > greenlimit then
-            validtotal = player.pos + total - greenlimit
-            validtotal = boardlib.transPlayable(validtotal, player.colour, player.lap)
-            player.validmoves = {validtotal}
+        if pawn.pos + total > greenlimit then
+            validtotal = pawn.pos + total - greenlimit
+            validtotal = boardlib.transPlayable(validtotal, pawn.colour, pawn.lap)
+            pawn.validmoves = {validtotal}
         else
-            print("Playerpos: ", player.pos)
-            total = boardlib.transPlayable(player.pos + total, player.colour, player.lap)
-            player.validmoves = {total}
+            total = boardlib.transPlayable(pawn.pos + total, pawn.colour, pawn.lap)
+            pawn.validmoves = {total}
         end
-        for i, cell in ipairs(player.validmoves) do
+        for i, cell in ipairs(pawn.validmoves) do
     
             globalboard[cell]:setFillColor(.35,.2,.86)
         end
-        print("---------------")
     end
 end
 
-function restoreColour(player) 
-    for i, cell in ipairs(player.validmoves) do
+function restoreColour(pawn) 
+    for i, cell in ipairs(pawn.validmoves) do
         if table.indexOf(blackies, cell) == nil then
             colour = boardlib.tellColour(cell)
-            print(colour)
             if colour == "solidred" then
                 globalboard[cell]:setFillColor(1, 0, 0)
             elseif colour == "solidyellow" then
@@ -90,11 +116,15 @@ function restoreColour(player)
     end
 end
 
-function player:tap(event)
-    player.tapped = true
-    if player.out then
+function playertap(event)
+    tappedplayer = event.target
+    tappedplayer.tapped = true
+    player.tappedpawn = event.target
+    print("This-->", tappedplayer.tapped, tappedplayer.out, player.rolled)
+    if tappedplayer.out then
         if player.rolled then
-            possibleMoves(player,diea, dieb)
+            possibleMoves(tappedplayer,diea, dieb)
+            print("Pawn moves: ", tappedplayer.validmoves)
         end
     player.rolled = false
     end
@@ -103,24 +133,29 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
-    if player.tapped and player.validmoves ~= nil then
-        for i, cell in ipairs(player.validmoves) do
+    pawn = player.tappedpawn 
+    print("Pawn valid moves:", pawn.validmoves)
+    if pawn.tapped and pawn.validmoves ~= nil then
+        for i, cell in ipairs(pawn.validmoves) do
             tile = globalboard[cell]
             if (event.target == tile) then
-               transition.moveTo(player, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(player, tile)})
-                player.pos = cell
-                restoreColour(player)
+               transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+                pawn.pos = cell
+                restoreColour(pawn)
+                pawn.tapped = false
                 return true
             end
         end
     end
+
     return false
 end
 
 
 
-
-player:addEventListener( "tap", player)
+for i, pawn in ipairs(player) do
+    pawn:addEventListener( "tap", playertap)
+end
 
 local function roll( event )
     local filename = "dice"
@@ -209,6 +244,16 @@ for i, tile in ipairs(globalboard) do
     tile:addEventListener("tap", tapListener)
 end
 
-player.x = homeredpos[1]+10
-player.y = homeredpos[2]
-player:toFront()
+-- Dibuja las fichas en la cárcel
+
+player[1].x = homeredpos[1]-20
+player[1].y = homeredpos[2]-20
+player[2].x = homeredpos[1]+20
+player[2].y = homeredpos[2]-20
+player[3].x = homeredpos[1]-20
+player[3].y = homeredpos[2]+20
+player[4].x = homeredpos[1]+20
+player[4].y = homeredpos[2]+20
+for i, pawn in ipairs(player) do
+    pawn:toFront()
+end

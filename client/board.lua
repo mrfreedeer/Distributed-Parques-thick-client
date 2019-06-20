@@ -12,6 +12,7 @@ function board.toCart(coords, center)
 end
 
 function board.enablelap(player) 
+	print(player.pos, player.lap)
 	if player.colour == "red" then
 		if player.pos>20 and not player.lap then
 			player.lap = true
