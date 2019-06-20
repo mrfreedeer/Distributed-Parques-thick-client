@@ -24,6 +24,7 @@ local bluelimit = 72
 local greenlimit = 96
 local player = {}
 local blackies = {}
+local tappedpawn = nil
 player.name ="lolita"
 player.out = false
 player.colour = "red"
@@ -117,14 +118,13 @@ function restoreColour(pawn)
 end
 
 function playertap(event)
-    tappedplayer = event.target
-    tappedplayer.tapped = true
-    player.tappedpawn = event.target
-    print("This-->", tappedplayer.tapped, tappedplayer.out, player.rolled)
-    if tappedplayer.out then
+    event.target.tapped = true  
+    
+    if event.target.out then
         if player.rolled then
-            possibleMoves(tappedplayer,diea, dieb)
-            print("Pawn moves: ", tappedplayer.validmoves)
+            possibleMoves(event.target,diea, dieb)
+            tappedpawn = event.target
+            print("Pawn moves: ", tappedpawn.validmoves)
         end
     player.rolled = false
     end
@@ -133,8 +133,8 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
-    pawn = player.tappedpawn 
-    print("Pawn valid moves:", pawn.validmoves)
+    pawn = tappedpawn
+    print("Pawn valid moves:", pawn.validmoves, "TAPPED:", tappedpawn)
     if pawn.tapped and pawn.validmoves ~= nil then
         for i, cell in ipairs(pawn.validmoves) do
             tile = globalboard[cell]
