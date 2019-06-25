@@ -12,7 +12,7 @@ function board.toCart(coords, center)
 end
 
 function board.enablelap(player) 
-	print(player.pos, player.lap)
+
 	if player.colour == "red" then
 		if player.pos>20 and not player.lap then
 			player.lap = true
@@ -48,9 +48,7 @@ function board.tellColour(pos)
 end
 
 function board.transPlayable(pos, colour, lapenabled)
-	print("POS: ", pos)
 	if colour == "red" then
-		print("trans",(pos>=25 and pos <=32) or (pos>=49 and pos <=56) or (pos>= 73 and pos <= 80))
 		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
 			return pos + 7
 		elseif pos>=9 and pos <=20 and lapenabled then
@@ -280,7 +278,6 @@ function board.drawboard()
 		end
 		bluelimit = num - 1
 		--Aqui empiezan las verdes
-		--print("Green", bluelimit)
 		posx = posx + diff
 		refx = posx 
 		posy = posy + 42

@@ -81,15 +81,30 @@ local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posible
     if pawn.tapped then
         total = diea + dieb
         if pawn.pos + total > greenlimit then
+            if pawn.pos + diea > greenlimit then
+                validiea = pawn.pos + diea - greenlimit
+            end
+            if pawn.pos + dieb > greenlimit then
+                validieb = pawn.pos + dieb - greenlimit
+            end
             validtotal = pawn.pos + total - greenlimit
             validtotal = boardlib.transPlayable(validtotal, pawn.colour, pawn.lap)
-            pawn.validmoves = {validtotal}
+            validiea = boardlib.transPlayable(validiea, pawn.colour, pawn.lap)
+            validieb = boardlib.transPlayable(validieb, pawn.colour, pawn.lap)
+            pawn.validmoves = {validtotal, validiea, validieb}
         else
             total = boardlib.transPlayable(pawn.pos + total, pawn.colour, pawn.lap)
-            pawn.validmoves = {total}
+            validiea = boardlib.transPlayable(pawn.pos + diea, pawn.colour, pawn.lap)
+            validieb = boardlib.transPlayable(pawn.pos + dieb, pawn.colour, pawn.lap)
+            pawn.validmoves = {total, validiea, validieb}
+        end
+        print("Validmoves:")
+        takeout = table.indexOf(pawn.validmoves, pawn.pos)
+        if takeout ~= nil then
+            table.remove(pawn.validmoves, takeout)
         end
         for i, cell in ipairs(pawn.validmoves) do
-    
+        print(cell)
             globalboard[cell]:setFillColor(.35,.2,.86)
         end
     end
@@ -119,14 +134,12 @@ end
 
 function playertap(event)
     event.target.tapped = true  
-    
+    print(player.rolled, event.target.out, event.target.tapped)
     if event.target.out then
         if player.rolled then
             possibleMoves(event.target,diea, dieb)
             tappedpawn = event.target
-            print("Pawn moves: ", tappedpawn.validmoves)
         end
-    player.rolled = false
     end
 end 
 function movehorizontal(player, tile)
@@ -134,7 +147,6 @@ function movehorizontal(player, tile)
 end
 function tapListener(event)
     pawn = tappedpawn
-    print("Pawn valid moves:", pawn.validmoves, "TAPPED:", tappedpawn)
     if pawn.tapped and pawn.validmoves ~= nil then
         for i, cell in ipairs(pawn.validmoves) do
             tile = globalboard[cell]
@@ -143,6 +155,19 @@ function tapListener(event)
                 pawn.pos = cell
                 restoreColour(pawn)
                 pawn.tapped = false
+
+                if cell == pawn.validmoves[1] then
+                    diea = 0
+                    dieb = 0
+                elseif cell == pawn.validmoves[2] then
+                    diea = 0
+                else
+                    dieb = 0
+                end 
+                print("Dice: ", diea, dieb)
+                if diea == 0 and dieb == 0 then
+                    player.rolled = false
+                end
                 return true
             end
         end
