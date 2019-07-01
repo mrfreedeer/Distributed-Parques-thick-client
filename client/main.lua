@@ -33,6 +33,31 @@ player.out = false
 player.colour = "red"
 player.rolled = false
 
+function tellHomeColour(player)
+    if player.colour == "red" then
+        homec = homeredpos 
+    elseif player.colour == "blue" then
+        homec = homebluepos 
+    elseif player.colour == "green" then
+        homec = homegreenpos
+    elseif player.colour == "yellow" then
+        homec = homeyellowpos
+    end
+    return homec
+end
+
+-- Dibuja las fichas en la cárcel
+function drawInJail(player, homecolour)
+    player[1].x = homecolour[1]-20
+    player[1].y = homecolour[2]-20
+    player[2].x = homecolour[1]+20
+    player[2].y = homecolour[2]-20
+    player[3].x = homecolour[1]-20
+    player[3].y = homecolour[2]+20
+    player[4].x = homecolour[1]+20
+    player[4].y = homecolour[2]+20
+end
+
 function createplayer(player)
     for i=1,4 do
        circle = display.newCircle(0,0,5)
@@ -44,11 +69,14 @@ function createplayer(player)
             circle.pos = 13
             circle:setFillColor(1,0,0)
         elseif player.colour == "yellow" then 
+            circle.pos = 35
             circle:setFillColor(1,1,0)
         elseif player.colour == "blue" then
             circle:setFillColor(0,0,1)
+            circle.pos = 61
         elseif player.colour == "green" then
             circle:setFillColor(0,1,0)
+            circle.pos = 85
         end
         circle:setStrokeColor(.2,.2,.2)
         circle.strokeWidth = 1
@@ -231,11 +259,11 @@ homered = display.newRect(homeredpos[1], homeredpos[2], 72, 78)
 homered.x = homeredpos[1]
 homered.y = homeredpos[2]
 
-homeygreenpos = {homegenpos[1]*-1,homegenpos[2]}
-homeygreenpos = boardlib.toScreen(homeygreenpos, center)
-homegreen = display.newRect(homeygreenpos[1], homeygreenpos[2], 72, 78)
-homegreen.x = homeygreenpos[1]
-homegreen.y = homeygreenpos[2]
+homegreenpos = {homegenpos[1]*-1,homegenpos[2]}
+homegreenpos = boardlib.toScreen(homegreenpos, center)
+homegreen = display.newRect(homegreenpos[1], homegreenpos[2], 72, 78)
+homegreen.x = homegreenpos[1]
+homegreen.y = homegreenpos[2]
 
 homegenpos = {-99,-172}
 homebluepos = {homegenpos[1],homegenpos[2]}
@@ -272,16 +300,9 @@ for i, tile in ipairs(globalboard) do
     tile:addEventListener("tap", tapListener)
 end
 
--- Dibuja las fichas en la cárcel
+homecolour = tellHomeColour(player)
+drawInJail(player, homecolour)
 
-player[1].x = homeredpos[1]-20
-player[1].y = homeredpos[2]-20
-player[2].x = homeredpos[1]+20
-player[2].y = homeredpos[2]-20
-player[3].x = homeredpos[1]-20
-player[3].y = homeredpos[2]+20
-player[4].x = homeredpos[1]+20
-player[4].y = homeredpos[2]+20
 
 
 for i, pawn in ipairs(player) do
@@ -299,13 +320,18 @@ local function processInfo()
                 if not otherplayersinfo then
                     if decoded.playersQuantity ~=nil then
                         otherPlayers = boardlib.drawOtherPlayers(decoded.playersQuantity, player.colour)
+                        print(otherPlayers[1][1].pos)
+                        for _, other_player in ipairs(otherPlayers) do 
+                            otherhomecolour = tellHomeColour(other_player)
+                            drawInJail(other_player, otherhomecolour)
+                        end 
                         otherplayersinfo = true
                         start = true
                     end
                 elseif start then 
+                    print(decoded)
                     if decoded.transition then 
-                        print(decoded.playerspositions.pawn1)
-                       --otherPlayers = boardlib:transitionOtherPlayers(otherPlayers, decoded.playerspositions, globalboard)
+                        otherPlayers = boardlib.transitionOtherPlayers(otherPlayers, decoded.playerspositions, globalboard)
                     end
                 end 
             end

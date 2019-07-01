@@ -4,7 +4,7 @@ import json
 import time
 
 clients = []
-players = '{"transition":true, "playerspositions": {"pawn1": 22 , "pawn2": 56, "pawn3": 65 , "pawn4": 55}}\n'
+players = '{"transition":true, "playerspositions": {"player1": {"pawn1": 22 , "pawn2": 56, "pawn3": 65 , "pawn4": 55}}}\n'
 class Receive(threading.Thread):
     def __init__(self, client,addr):
             super(Receive,self).__init__()
@@ -28,7 +28,7 @@ while True:
     c, addr = servsocket.accept()
     print ("Connection from: ", addr)
     c.send('{"playersQuantity": 1}\n')
-    time.sleep(1)
+    time.sleep(5)
     c.send(players)
     clients.append(c)
     t = Receive(c,addr)

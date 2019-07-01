@@ -5,7 +5,7 @@ function board.drawOtherPlayers(numberOfplayers, playercolour)
 	index = table.indexOf(colours, playercolour)
 	table.remove(colours, index)
 
-	local othersplayers = {}
+	local otherplayers = {}
 	for j=1, numberOfplayers do
 		playerset = {}
 		for i=1, 4 do
@@ -15,19 +15,23 @@ function board.drawOtherPlayers(numberOfplayers, playercolour)
 				circle.pos = 13
 				circle:setFillColor(1,0,0)
 			elseif circlecolour == "yellow" then 
+				circle.pos = 35
 				circle:setFillColor(1,1,0)
 			elseif circlecolour == "blue" then
 				circle:setFillColor(0,0,1)
+				circle.pos = 61
 			elseif circlecolour == "green" then
 				circle:setFillColor(0,1,0)
+				circle.pos = 85
       		end
 			circle:setStrokeColor(.2,.2,.2)
 			circle.strokeWidth = 1
 			table.insert(playerset, circle)
+			playerset.colour = circlecolour
 		end
-		table.insert(othersplayers, playerset)
+		table.insert(otherplayers, playerset)
 	end
-	return othersplayers
+	return otherplayers
 end 
 
 function movehorizontal(player, tile)
@@ -35,10 +39,13 @@ function movehorizontal(player, tile)
 end
 
 function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboard)
+	local positions = {}
+	local playerstring = "player"
+	local pawnstring = "pawn"
 	for _, player in ipairs(otherPlayers) do
-		positions = playerspositions[_]
+		positions = playerspositions[playerstring .. _]
 		for i, pawn in ipairs(player) do 
-			pawnpos = positions[i]
+			pawnpos = positions[pawnstring..i]
 			tile = globalboard[pawnpos]
 			transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
 		end
@@ -253,7 +260,7 @@ function board.drawboard()
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
-			if i == 7 then
+			if i == 6 then
 				f:setStrokeColor( 1, 1, 0)
 				f:setFillColor(.2,.2,.2)
 				table.insert(blackies, num -1)
@@ -295,7 +302,7 @@ function board.drawboard()
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
-			if i == 4 then
+			if i == 5 then
 				f:setStrokeColor(0,0,1)
 				f:setFillColor(.2,.2,.2)
 				table.insert(blackies, num -1)
@@ -314,7 +321,7 @@ function board.drawboard()
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
-			if i == 3 then
+			if i == 2 then
 				f:setStrokeColor(0,0,0)
 				f:setFillColor(.2,.2,.2)
 				table.insert(blackies, num -1)
@@ -358,7 +365,7 @@ function board.drawboard()
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
-			if i == 4 then
+			if i == 5 then
 				f:setStrokeColor(0,0,0)
 				f:setFillColor(.2,.2,.2)
 				table.insert(blackies, num -1)
