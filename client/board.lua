@@ -1,4 +1,51 @@
 local board = {}
+
+function board.drawOtherPlayers(numberOfplayers, playercolour)
+	local colours = {"red", "blue", "yellow", "green"}
+	index = table.indexOf(colours, playercolour)
+	table.remove(colours, index)
+
+	local othersplayers = {}
+	for j=1, numberOfplayers do
+		playerset = {}
+		for i=1, 4 do
+			circle = display.newCircle(0,0,5)
+			circlecolour = colours[j]
+			if circlecolour == "red" then
+				circle.pos = 13
+				circle:setFillColor(1,0,0)
+			elseif circlecolour == "yellow" then 
+				circle:setFillColor(1,1,0)
+			elseif circlecolour == "blue" then
+				circle:setFillColor(0,0,1)
+			elseif circlecolour == "green" then
+				circle:setFillColor(0,1,0)
+      		end
+			circle:setStrokeColor(.2,.2,.2)
+			circle.strokeWidth = 1
+			table.insert(playerset, circle)
+		end
+		table.insert(othersplayers, playerset)
+	end
+	return othersplayers
+end 
+
+function movehorizontal(player, tile)
+    transition.moveTo(player, {x = tile.x, 500})
+end
+
+function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboard)
+	for _, player in ipairs(otherPlayers) do
+		positions = playerspositions[_]
+		for i, pawn in ipairs(player) do 
+			pawnpos = positions[i]
+			tile = globalboard[pawnpos]
+			transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+		end
+	end
+	return otherPlayers
+end
+
 function board.toScreen(coords, center)
 	ny = center[2] - coords[2]
 	nx = (coords[1] + center[1])
@@ -12,7 +59,7 @@ function board.toCart(coords, center)
 end
 
 function board.enablelap(player) 
-
+	print(player.pos, player.lap)
 	if player.colour == "red" then
 		if player.pos>20 and not player.lap then
 			player.lap = true
@@ -48,7 +95,9 @@ function board.tellColour(pos)
 end
 
 function board.transPlayable(pos, colour, lapenabled)
+	print("POS: ", pos)
 	if colour == "red" then
+		print("trans",(pos>=25 and pos <=32) or (pos>=49 and pos <=56) or (pos>= 73 and pos <= 80))
 		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
 			return pos + 7
 		elseif pos>=9 and pos <=20 and lapenabled then
@@ -278,6 +327,7 @@ function board.drawboard()
 		end
 		bluelimit = num - 1
 		--Aqui empiezan las verdes
+		--print("Green", bluelimit)
 		posx = posx + diff
 		refx = posx 
 		posy = posy + 42
@@ -342,5 +392,6 @@ function board.drawboard()
 		greenlimit = num - 1
 		return global, blackies
 end
+
 
 return board

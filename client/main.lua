@@ -5,13 +5,11 @@
 -----------------------------------------------------------------------------------------
 
 
----local socket = require( "socket")
----local client = socket.connect("localhost",8000)
-
----client:send("Hello")
-
 local boardlib = require "board"
+local comms = require "communication"
 local widget = require "widget"
+local json = require ("json")
+
 local halfH = display.contentHeight * 0.5
 local halfW = display.contentWidth * 0.5
 local diea = nil
@@ -25,6 +23,11 @@ local greenlimit = 96
 local player = {}
 local blackies = {}
 local tappedpawn = nil
+local otherplayersinfo = false
+local otherPlayers = {}
+local start = false
+
+
 player.name ="lolita"
 player.out = false
 player.colour = "red"
@@ -37,14 +40,14 @@ function createplayer(player)
        circle.auxlap = false
        circle.lap = false
        circle.colour = player.colour
-       if player.colour == "red" then
-        circle.pos = 13
-        circle:setFillColor(1,0,0)
-        elseif circle.colour == "yellow" then 
+        if player.colour == "red" then
+            circle.pos = 13
+            circle:setFillColor(1,0,0)
+        elseif player.colour == "yellow" then 
             circle:setFillColor(1,1,0)
-        elseif circle.colour == "blue" then
+        elseif player.colour == "blue" then
             circle:setFillColor(0,0,1)
-        elseif circle.colour == "green" then
+        elseif player.colour == "green" then
             circle:setFillColor(0,1,0)
         end
         circle:setStrokeColor(.2,.2,.2)
@@ -279,6 +282,37 @@ player[3].x = homeredpos[1]-20
 player[3].y = homeredpos[2]+20
 player[4].x = homeredpos[1]+20
 player[4].y = homeredpos[2]+20
+
+
 for i, pawn in ipairs(player) do
     pawn:toFront()
 end
+
+
+----------------
+
+local function processInfo()
+    data, incoming = comms.receiveInfo()
+        if incoming then
+            if data ~= nil then 
+                decoded = json.decode(data)
+                if not otherplayersinfo then
+                    if decoded.playersQuantity ~=nil then
+                        otherPlayers = boardlib.drawOtherPlayers(decoded.playersQuantity, player.colour)
+                        otherplayersinfo = true
+                        start = true
+                    end
+                elseif start then 
+                    if decoded.transition then 
+                        print(decoded.playerspositions.pawn1)
+                       --otherPlayers = boardlib:transitionOtherPlayers(otherPlayers, decoded.playerspositions, globalboard)
+                    end
+                end 
+            end
+        end
+
+end
+
+local s_loop = timer.performWithDelay(50, processInfo, -1)
+
+comms.sendinfo(player)

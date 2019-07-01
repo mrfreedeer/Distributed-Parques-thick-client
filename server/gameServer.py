@@ -1,13 +1,36 @@
 import socket
+import threading
+import json
+import time
+
+clients = []
+players = '{"transition":true, "playerspositions": {"pawn1": 22 , "pawn2": 56, "pawn3": 65 , "pawn4": 55}}\n'
+class Receive(threading.Thread):
+    def __init__(self, client,addr):
+            super(Receive,self).__init__()
+            self.client = client
+            self.addr = addr
+    def run(self):
+        while True:
+           position = self.client.recv(1024)
+           print position
+           print type(position)
+           position = json.loads(position)
+           print position['pawn1']
 
 servsocket = socket.socket()
 
 servsocket.bind(("127.0.0.1", 8000))
 servsocket.listen(4)
 
-c, addr = servsocket.accept()
-print ("Connection from: ", addr)
-
-print c.recv(1024)
-
+print "Parques Server Running..."
+while True:
+    c, addr = servsocket.accept()
+    print ("Connection from: ", addr)
+    c.send('{"playersQuantity": 1}\n')
+    time.sleep(1)
+    c.send(players)
+    clients.append(c)
+    t = Receive(c,addr)
+    t.start()
 servsocket.close()
