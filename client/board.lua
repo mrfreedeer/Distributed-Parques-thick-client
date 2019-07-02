@@ -1,5 +1,6 @@
 local board = {}
 
+
 function board.drawOtherPlayers(numberOfplayers, playercolour)
 	local colours = {"red", "blue", "yellow", "green"}
 	index = table.indexOf(colours, playercolour)
@@ -143,7 +144,7 @@ function board.transPlayable(pos, colour, lapenabled)
 	return pos
 end
 
-function board.drawboard()
+function board.drawboard(displaygroup, center )
 		global =  {}
 		posx = 0 
 		posy = 65
@@ -152,7 +153,7 @@ function board.drawboard()
 		blackies = {}
 		for i=1, 8 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -173,7 +174,7 @@ function board.drawboard()
 		posx = posx-42
 		for i=1, 10 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -193,7 +194,7 @@ function board.drawboard()
 		posy = posy + 27
 		for i=1, 6 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -215,7 +216,7 @@ function board.drawboard()
 		refx = posx
 		for i=1, 8 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -236,7 +237,7 @@ function board.drawboard()
 
 		for i=1, 6 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -256,7 +257,7 @@ function board.drawboard()
 		posy = posy + 15
 		for i=1, 10 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -279,7 +280,7 @@ function board.drawboard()
 		posx = posx + 42
 		for i=1, 8 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -298,7 +299,7 @@ function board.drawboard()
 		posx = posx + 42
 		for i=1, 10 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -317,7 +318,7 @@ function board.drawboard()
 		posx = posx + 27
 		for i=1, 6 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -340,7 +341,7 @@ function board.drawboard()
 		posy = posy + 42
 		for i=1, 8 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -361,7 +362,7 @@ function board.drawboard()
 		posy = posy + 42
 		for i=1, 6 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 10,40)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 10,40)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1
@@ -381,7 +382,7 @@ function board.drawboard()
 		
 		for i=1, 10 do
 			screenpos = board.toScreen({posx, posy}, center)
-			local f = display.newRect(screenpos[1], screenpos[2], 40,10)
+			local f = display.newRect(displaygroup,screenpos[1], screenpos[2], 40,10)
 			f.strokeWidth = 1
 			f.number = num
 			num = num + 1

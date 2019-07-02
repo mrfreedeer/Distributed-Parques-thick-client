@@ -3,6 +3,7 @@ import threading
 import json
 import time
 
+availablecolours = ["red", "blue", "green", "yellow"]
 clients = []
 players = '{"transition":true, "playerspositions": {"player1": {"pawn1": 22 , "pawn2": 56, "pawn3": 65 , "pawn4": 55}}}\n'
 class Receive(threading.Thread):
@@ -12,11 +13,16 @@ class Receive(threading.Thread):
             self.addr = addr
     def run(self):
         while True:
-           position = self.client.recv(1024)
-           print position
-           print type(position)
-           position = json.loads(position)
-           print position['pawn1']
+           incoming = self.client.recv(1024)
+           data = json.loads(incoming)
+           if "colour" in data:
+               availablecolours.remove(data["colour"])
+           else:
+               position = data
+               print position
+               print type(position)
+               position = json.loads(position)
+               print position['pawn1']
 
 servsocket = socket.socket()
 
