@@ -1,5 +1,12 @@
 local composer = require( "composer" )
- 
+comms = require "communication"
+json = require ("json")
+
+availablecolours = {}
+
+
+
+
 -- Hide status bar
 display.setStatusBar( display.HiddenStatusBar )
  

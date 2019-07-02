@@ -1,6 +1,6 @@
-local socket = require( "socket")
+socket = require( "socket")
 local json = require( "json")
-local client = socket.connect("localhost",8000)
+client = socket.connect("localhost",8000)
 
 client:settimeout(0)
 client:setoption("keepalive",true)
@@ -9,6 +9,10 @@ if not client then
 end 
 
 local communication = {}
+
+function communication.sendMessage(message)
+    client:send(message)
+end
 
 function communication.sendinfo(player)
     local info = {}

@@ -9,9 +9,7 @@ local scene = composer.newScene()
 
 local everything
 local boardlib = require "board"
-local comms = require "communication"
 local widget = require "widget"
-local json = require ("json")
 
 local halfH = display.contentHeight * 0.5
 local halfW = display.contentWidth * 0.5
@@ -36,7 +34,7 @@ local start = false
 
 player.name ="lolita"
 player.out = false
-player.colour = "red"
+player.colour = chosencolour
 player.rolled = false
 
 function tellHomeColour(player)
