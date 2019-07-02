@@ -4,7 +4,7 @@ json = require ("json")
 playerid = ""
 availablecolours = {}
 otherPlayers = {}
-
+serverAddress = ""
 
 
 -- Hide status bar

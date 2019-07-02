@@ -7,11 +7,11 @@ local gotId = false
 local startup = {}
 
 local function gotoGame()
+    
+    composer.removeScene("menu")
     composer.gotoScene("selectColour")
 end
 
-local function enterServerAddress()
-end
 
 function string:split( inSplitPattern )
  
@@ -31,7 +31,6 @@ end
 
 local function getStartupInfo()
     local data, incoming = comms.receiveInfo()
-    print("---------- STILL STARTING ----------","----GOTCOLOURS: ", gotColours, "----GOTID: ", gotId)
     if incoming then
         if data ~= nil then 
             message = json.decode(data)
@@ -61,6 +60,28 @@ local function getStartupInfo()
     end
 end
 
+local function inputListener( event )
+ 
+    if ( event.phase == "began" ) then
+        -- User begins editing "defaultField"
+ 
+    elseif ( event.phase == "ended" or event.phase == "submitted" ) then
+        -- Output resulting text from "defaultField"
+        serverAddress = event.target.text
+        print( event.target.text )
+        if comms.connect(serverAddress) then
+          startup = timer.performWithDelay(50, getStartupInfo, 0)
+          event.target:removeSelf()
+        end
+ 
+    elseif ( event.phase == "editing" ) then
+        print( event.newCharacters )
+        print( event.oldText )
+        print( event.startPosition )
+        print( event.text )
+    end
+end
+
 
 function scene:create(event)
     local sceneGroup = self.view
@@ -68,12 +89,12 @@ function scene:create(event)
     background.x = display.contentCenterX
     background.y = display.contentCenterY
 
-    local serverText = display.newText(sceneGroup, "Ingresar dirección del servidor", display.contentCenterX, display.contentCenterY - 20, native.systemFont, 20 )
+    local serverText = display.newText(sceneGroup, "Ingresar dirección del servidor", display.contentCenterX, display.contentCenterY - 50, native.systemFont, 20 )
+    local serverField = native.newTextField(display.contentCenterX, display.contentCenterY - 20, 180, 30)
     local gameText = display.newText(sceneGroup, "Jugar", display.contentCenterX, display.contentCenterY + 50, native.systemFont, 20 )
-
+    sceneGroup:insert(serverField)
     
-
-    serverText:addEventListener("tap", enterServerAddress)
+    serverField: addEventListener("userInput", inputListener)
     gameText:addEventListener("tap", gotoGame)
 end
 
@@ -87,8 +108,6 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        startup = timer.performWithDelay(50, getStartupInfo, 0)
-        
  
     end
 end

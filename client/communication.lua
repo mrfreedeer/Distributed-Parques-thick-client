@@ -1,14 +1,22 @@
 socket = require( "socket")
 local json = require( "json")
-client = socket.connect("localhost",8000)
+client = ""
 
-client:settimeout(0)
-client:setoption("keepalive",true)
-if not client then 
-    print("Error, could not connect to server")
-end 
+
 
 local communication = {}
+
+function communication.connect(serverAddress)
+    client = socket.connect(serverAddress,8000)
+    client:settimeout(0)
+    client:setoption("keepalive",true)
+    if not client then 
+        print("Error, could not connect to server")
+        return false 
+    else 
+        return true
+    end 
+end
 
 function communication.sendMessage(message)
     client:send(message)
