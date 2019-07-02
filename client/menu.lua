@@ -3,6 +3,9 @@
 local composer = require("composer")
 local scene = composer.newScene()
 local gotColours = false
+local gotId = false
+local startup = {}
+
 local function gotoGame()
     composer.gotoScene("selectColour")
 end
@@ -26,28 +29,35 @@ function string:split( inSplitPattern )
     return outResults
 end
 
-local function getAvailableColours()
+local function getStartupInfo()
     local data, incoming = comms.receiveInfo()
-
+    print("---------- STILL STARTING ----------","----GOTCOLOURS: ", gotColours, "----GOTID: ", gotId)
     if incoming then
-
-        print(data)
         if data ~= nil then 
-            decoded = json.decode(data)
-            if decoded.colours ~= nil then 
-                gotColours = true
-                print("Avaialable colours")
-                availableColours = decoded.colours:split(",")
-                for _, i in ipairs(availableColours) do
-                    print(i)
-                end
+            message = json.decode(data)
+            if not gotColours then
+                comms.sendMessage("false")
+                if message.colours ~= nil then 
+                    gotColours = true
+                    print("Avaialable colours")
+                    availableColours = message.colours:split(",")
+                    for _, i in ipairs(availableColours) do
+                        print(i)
+                    end
 
-                comms.sendMessage("true")
+                    comms.sendMessage("true")
+                end
+            elseif not gotId then 
+                if message.playerid ~= nil then 
+                    playerid = message.playerid
+                    gotId = true
+                end 
             end
         end
     end
-    if not gotColours then 
-        comms.sendMessage("false")
+
+    if gotId and gotColours then
+        timer.cancel(startup)
     end
 end
 
@@ -77,10 +87,8 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        colourloop = timer.performWithDelay(50, getAvailableColours, 0)
-        if gotColours then
-            colourloop.cancel()
-        end
+        startup = timer.performWithDelay(50, getStartupInfo, 0)
+        
  
     end
 end

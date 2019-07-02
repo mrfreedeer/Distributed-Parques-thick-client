@@ -199,8 +199,8 @@ function tapListener(event)
                 else
                     dieb = 0
                 end 
-                print("Dice: ", diea, dieb)
                 if diea == 0 and dieb == 0 then
+                    comms.sendinfo(player)
                     player.rolled = false
                 end
                 return true
@@ -266,22 +266,24 @@ local function processInfo()
     data, incoming = comms.receiveInfo()
         if incoming then
             if data ~= nil then 
-                decoded = json.decode(data)
+                message = json.decode(data)
                 if not otherplayersinfo then
-                    if decoded.playersQuantity ~=nil then
-                        otherPlayers = boardlib.drawOtherPlayers(decoded.playersQuantity, player.colour)
-                        print(otherPlayers[1][1].pos)
-                        for _, other_player in ipairs(otherPlayers) do 
-                            otherhomecolour = tellHomeColour(other_player)
-                            drawInJail(other_player, otherhomecolour)
-                        end 
-                        otherplayersinfo = true
-                        start = true
+                    if message.newplayer ~=nil then
+                        newPlayerid = message.playerid 
+                        newPlayer = boardlib.drawOtherPlayers(message.colour)
+                        newPlayer.playerid = newPlayerid
+                        table.insert(otherPlayers, newPlayer)
+                        otherhomecolour = tellHomeColour(newPlayer)
+                        drawInJail(newPlayer, otherhomecolour)
+                    elseif message.startgame then 
+                        print("START")
+                        start = true 
+                        otherplayersinfo = true 
                     end
+                    
                 elseif start then 
-                    print(decoded)
-                    if decoded.transition then 
-                        otherPlayers = boardlib.transitionOtherPlayers(otherPlayers, decoded.playerspositions, globalboard)
+                    if message.transition then 
+                        otherPlayers = boardlib.transitionOtherPlayers(otherPlayers, message.playerspositions, globalboard)
                     end
                 end 
             end
@@ -290,9 +292,6 @@ local function processInfo()
 end
 
 local s_loop = timer.performWithDelay(50, processInfo, -1)
-
-comms.sendinfo(player)
-
 
 
 --------------------------------------------------

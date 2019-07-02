@@ -1,9 +1,9 @@
 local composer = require( "composer" )
 comms = require "communication"
 json = require ("json")
-
+playerid = ""
 availablecolours = {}
-
+otherPlayers = {}
 
 
 

@@ -1,38 +1,33 @@
 local board = {}
 
 
-function board.drawOtherPlayers(numberOfplayers, playercolour)
-	local colours = {"red", "blue", "yellow", "green"}
-	index = table.indexOf(colours, playercolour)
-	table.remove(colours, index)
+function board.drawOtherPlayers(playercolour)
 
-	local otherplayers = {}
-	for j=1, numberOfplayers do
-		playerset = {}
-		for i=1, 4 do
-			circle = display.newCircle(0,0,5)
-			circlecolour = colours[j]
-			if circlecolour == "red" then
-				circle.pos = 13
-				circle:setFillColor(1,0,0)
-			elseif circlecolour == "yellow" then 
-				circle.pos = 35
-				circle:setFillColor(1,1,0)
-			elseif circlecolour == "blue" then
-				circle:setFillColor(0,0,1)
-				circle.pos = 61
-			elseif circlecolour == "green" then
-				circle:setFillColor(0,1,0)
-				circle.pos = 85
-      		end
-			circle:setStrokeColor(.2,.2,.2)
-			circle.strokeWidth = 1
-			table.insert(playerset, circle)
-			playerset.colour = circlecolour
+	playerset = {}
+	for i=1, 4 do
+		circle = display.newCircle(0,0,5)
+		circlecolour = playercolour
+		if circlecolour == "red" then
+			circle.pos = 13
+			circle:setFillColor(1,0,0)
+		elseif circlecolour == "yellow" then 
+			circle.pos = 35
+			circle:setFillColor(1,1,0)
+		elseif circlecolour == "blue" then
+			circle:setFillColor(0,0,1)
+			circle.pos = 61
+		elseif circlecolour == "green" then
+			circle:setFillColor(0,1,0)
+			circle.pos = 85
 		end
-		table.insert(otherplayers, playerset)
+		circle:setStrokeColor(.2,.2,.2)
+		circle.strokeWidth = 1
+		table.insert(playerset, circle)
+		playerset.colour = circlecolour
 	end
-	return otherplayers
+	
+
+	return playerset
 end 
 
 function movehorizontal(player, tile)
@@ -44,11 +39,12 @@ function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboar
 	local playerstring = "player"
 	local pawnstring = "pawn"
 	for _, player in ipairs(otherPlayers) do
-		positions = playerspositions[playerstring .. _]
-		for i, pawn in ipairs(player) do 
-			pawnpos = positions[pawnstring..i]
-			tile = globalboard[pawnpos]
-			transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+			positions = playerspositions[player.playerid]
+			print(player)
+			for i, pawn in ipairs(player) do 
+				pawnpos = positions[pawnstring..i]
+				tile = globalboard[pawnpos]
+				transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
 		end
 	end
 	return otherPlayers
