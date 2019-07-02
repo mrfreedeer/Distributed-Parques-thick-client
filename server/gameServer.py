@@ -33,10 +33,11 @@ def test(client):
 
 
 class Receive(threading.Thread):
-    def __init__(self, client,addr):
+    def __init__(self, client, addr, id):
             super(Receive,self).__init__()
             self.client = client
             self.addr = addr
+            self.clientid = id
     def run(self):
         while True:
            incoming = self.client.recv(1024)
@@ -44,11 +45,12 @@ class Receive(threading.Thread):
            if "colour" in data:
                availablecolours.remove(data["colour"])
            else:
-               position = data
-               print position
-               print type(position)
-               position = json.loads(position)
-               print position['pawn1']
+                 transitionstring = '{"transition" : true, "playerpositions": {"' + self.clientid +'": '+ incoming
+                 print transitionstring
+                 for key, client in clients.iteritems():
+                   if key != self.clientid: 
+                       client.send(transitionstring)
+                   
 
 servsocket = socket.socket()
 
@@ -70,9 +72,9 @@ while True:
                 print("Current colours: ", availablecolours)
                 receivedcolours = True
 
-        playerid = '{"playerid" : "' + playerstring + str(playernumber) + '"}\n'
-        
-        c.send(playerid)
+        playeridstring = '{"playerid" : "' + playerstring + str(playernumber) + '"}\n'
+        playerid = playerstring + str(playernumber)
+        c.send(playeridstring)
         for key, client in clients.iteritems():
             newplayerstring ='{"newplayer":true, "playerid" : "' + str(playernumber) + '", "colour" : "' + colour + '"}\n'
             client.send(newplayerstring)
@@ -81,7 +83,7 @@ while True:
         playernumber += 1
         clients[playerstring+str(playernumber)]= c
 
-        t = Receive(c,addr)
+        t = Receive(c,addr, playerid)
         t.start()
 
 
