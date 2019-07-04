@@ -26,16 +26,23 @@ local greenlimit = 96
 local player = {}
 local blackies = {}
 local tappedpawn = nil
-local otherplayersinfo = false
-local otherPlayers = {}
-local start = false
 
+local otherPlayers = {}
+
+-----   Test Area ----------
+----------------------------
+local otherplayersinfo = false
+local start = false
+local turn = false 
+local takePawn = false
+----------------------------
 
 
 player.name ="lolita"
 player.out = false
 player.colour = chosencolour
 player.rolled = false
+timesRolled = 0
 
 function tellHomeColour(player)
     if player.colour == "red" then
@@ -168,12 +175,13 @@ function restoreColour(pawn)
 end
 
 function playertap(event)
-    event.target.tapped = true  
-    print(player.rolled, event.target.out, event.target.tapped)
-    if event.target.out then
-        if player.rolled then
-            possibleMoves(event.target,diea, dieb)
-            tappedpawn = event.target
+    if turn then
+        event.target.tapped = true  
+        if event.target.out then
+            if player.rolled then
+                possibleMoves(event.target,diea, dieb)
+                tappedpawn = event.target
+            end
         end
     end
 end 
@@ -181,34 +189,38 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
-    pawn = tappedpawn
-    if pawn.tapped and pawn.validmoves ~= nil then
-        for i, cell in ipairs(pawn.validmoves) do
-            tile = globalboard[cell]
-            if (event.target == tile) then
-               transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
-                pawn.pos = cell
-                restoreColour(pawn)
-                pawn.tapped = false
+    if turn then 
+        pawn = tappedpawn
+        if pawn.tapped and pawn.validmoves ~= nil then
+            for i, cell in ipairs(pawn.validmoves) do
+                tile = globalboard[cell]
+                if (event.target == tile) then
+                transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+                    pawn.pos = cell
+                    restoreColour(pawn)
+                    pawn.tapped = false
 
-                if cell == pawn.validmoves[1] then
-                    diea = 0
-                    dieb = 0
-                elseif cell == pawn.validmoves[2] then
-                    diea = 0
-                else
-                    dieb = 0
-                end 
-                if diea == 0 and dieb == 0 then
-                    comms.sendinfo(player)
-                    player.rolled = false
+                    if cell == pawn.validmoves[1] then
+                        diea = 0
+                        dieb = 0
+                    elseif cell == pawn.validmoves[2] then
+                        diea = 0
+                    else
+                        dieb = 0
+                    end 
+                    if diea == 0 and dieb == 0 then
+                        comms.sendinfo(player)
+                        turn = false 
+                        rolldice:setEnabled(false)
+                        player.rolled = true
+                    end
+                    return true
                 end
-                return true
             end
         end
-    end
 
-    return false
+        return false
+    end
 end
 
 
@@ -218,27 +230,50 @@ for i, pawn in ipairs(player) do
 end
 
 local function roll( event )
-    local filename = "dice"
-    local extension = ".png"
-    if player.out then
-        player.rolled = true
-    end
-    if ( "ended" == event.phase ) then
-        diea=math.random(1,6)
-        dieb=math.random(1,6)
-        local rolleda = display.newImageRect(filename..diea..extension,50,50)
-        rolleda.x, rolleda.y = 50, 125
-        local rolledb = display.newImageRect(filename..dieb..extension,50,50)
-        rolledb.x, rolledb.y = 100, 125
-    end
-    if (diea == dieb and diea ~= nil and not player.out) then
-        exitprison(player)
+    if turn then
+        local filename = "dice"
+        local extension = ".png"
+    
+        if ( "ended" == event.phase ) then
+            diea=math.random(1,6)
+            dieb=math.random(1,6)
+            local rolleda = display.newImageRect(filename..diea..extension,50,50)
+            rolleda.x, rolleda.y = 50, 125
+            local rolledb = display.newImageRect(filename..dieb..extension,50,50)
+            rolledb.x, rolledb.y = 100, 125
+        
+            print("---", player.out, timesRolled)
+            if player.out then
+                if (diea == dieb) and (diea ~= nil) then
+                    if timesRolled == 2 then 
+                        takePawn = true
+                        timesRolled = 0 
+                    else 
+                        timesRolled = timesRolled + 1
+                    end
+                else 
+                player.rolled = true
+                end
+            else 
+                if timesRolled == 2 then 
+                    turn = false
+                    rolldice:setEnabled(false) 
+                    timesRolled = 0 
+                    comms.sendinfo(player)
+                else 
+                    timesRolled = timesRolled + 1
+                end
+            end
+        end
+        if (diea == dieb and diea ~= nil and not player.out) then
+            exitprison(player)
+        end
     end
 
 end
  
 -- Boton creado (Tipo de Widget)
-local rolldice = widget.newButton(
+rolldice = widget.newButton(
     {
         width = 150,
         height = 20,
@@ -246,7 +281,8 @@ local rolldice = widget.newButton(
         id = "rolldice",
         label = "Lanzar dados",
         labelColor = { default={ 1, 1, 1, 1 }, over={ .2, .2, .2,.2} },
-        onEvent = roll
+        onEvent = roll,
+        isEnabled = true
     }
 )
 
@@ -284,6 +320,10 @@ local function processInfo()
                 elseif start then 
                     if message.transition then 
                         otherPlayers = boardlib.transitionOtherPlayers(otherPlayers, message.playerspositions, globalboard)
+                    elseif message.turngranted then 
+                        print(message.turngranted)
+                        turn = true
+                        rolldice:setEnabled(true)  
                     end
                 end 
             end
