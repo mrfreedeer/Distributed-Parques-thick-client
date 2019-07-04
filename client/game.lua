@@ -26,15 +26,15 @@ local greenlimit = 96
 local player = {}
 local blackies = {}
 local tappedpawn = nil
-
+turnText = {}
 local otherPlayers = {}
 
 -----   Test Area ----------
 ----------------------------
-local otherplayersinfo = false
-local start = false
-local turn = false 
-local takePawn = false
+local otherplayersinfo = true
+local start = true
+local turn = true 
+local takePawn = true
 ----------------------------
 
 
@@ -191,30 +191,32 @@ end
 function tapListener(event)
     if turn then 
         pawn = tappedpawn
-        if pawn.tapped and pawn.validmoves ~= nil then
-            for i, cell in ipairs(pawn.validmoves) do
-                tile = globalboard[cell]
-                if (event.target == tile) then
-                transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
-                    pawn.pos = cell
-                    restoreColour(pawn)
-                    pawn.tapped = false
+        if pawn ~= nil then
+            if pawn.tapped and pawn.validmoves ~= nil then
+                for i, cell in ipairs(pawn.validmoves) do
+                    tile = globalboard[cell]
+                    if (event.target == tile) then
+                    transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+                        pawn.pos = cell
+                        restoreColour(pawn)
+                        pawn.tapped = false
 
-                    if cell == pawn.validmoves[1] then
-                        diea = 0
-                        dieb = 0
-                    elseif cell == pawn.validmoves[2] then
-                        diea = 0
-                    else
-                        dieb = 0
-                    end 
-                    if diea == 0 and dieb == 0 then
-                        comms.sendinfo(player)
-                        turn = false 
-                        rolldice:setEnabled(false)
-                        player.rolled = true
+                        if cell == pawn.validmoves[1] then
+                            diea = 0
+                            dieb = 0
+                        elseif cell == pawn.validmoves[2] then
+                            diea = 0
+                        else
+                            dieb = 0
+                        end 
+                        if diea == 0 and dieb == 0 then
+                            comms.sendinfo(player)
+                            turn = false 
+                            rolldice:setEnabled(false)
+                            player.rolled = true
+                        end
+                        return true
                     end
-                    return true
                 end
             end
         end
@@ -272,6 +274,23 @@ local function roll( event )
 
 end
  
+
+
+local function sendStartGame(event)
+    if ( "ended" == event.phase ) then
+        comms.sendMessage('{"start": true}')
+    end
+end 
+
+local function onComplete( event )
+    if ( event.action == "clicked" ) then
+        local i = event.index
+        if ( i == 1 ) then
+            -- Do nothing; dialog will simply dismiss
+        end
+    end
+end
+
 -- Boton creado (Tipo de Widget)
 rolldice = widget.newButton(
     {
@@ -286,10 +305,22 @@ rolldice = widget.newButton(
     }
 )
 
-
+startbutton = widget.newButton(
+    {
+        width = 65,
+        height = 45,
+        defaultFile = "startgame.png",
+        id = "startgame",
+        labelColor = { default={ 1, 1, 1, 1 }, over={ .2, .2, .2,.2} },
+        onEvent = sendStartGame,
+        isEnabled = true
+    }
+)
 
 rolldice.x = 93
 rolldice.y = halfH *2 -15
+startbutton.x = rolldice.x + 115
+startbutton.y = rolldice.y
 testnum = 0
 
 
@@ -315,6 +346,8 @@ local function processInfo()
                         print("START")
                         start = true 
                         otherplayersinfo = true 
+                    elseif message.waiting then 
+                        alert = native.showAlert( "Esperando", "Seugimos esperando a más jugadores.", { "OK" }, closeAlert )
                     end
                     
                 elseif start then 
@@ -323,6 +356,7 @@ local function processInfo()
                     elseif message.turngranted then 
                         print(message.turngranted)
                         turn = true
+                        turnText.alpha = 1
                         rolldice:setEnabled(true)  
                     end
                 end 
@@ -397,7 +431,8 @@ function scene:create(event)
     for i, pawn in ipairs(player) do
         pawn:toFront()
     end
-
+    turnText = display.newText(sceneGroup, "Su turno", display.contentCenterX + 15, display.contentCenterY - 100, native.systemFont, 20 )
+    turnText.alpha = 0
     sceneGroup:insert(everything)
     
 end

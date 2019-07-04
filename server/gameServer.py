@@ -14,7 +14,7 @@ transitiontest = '{"transition":true, "playerspositions": {"player1": {"pawn1": 
 playerstring = "player"
 playernumber = 1
 maxplayers = False
-startgame = False
+isGameOn = False
 clientpool = cycle(clientsid)
 
 
@@ -23,7 +23,7 @@ def getColours(availablecolours):
     for x in availablecolours:
         print x
         colourstr = colourstr + x + ","
-    colourstr = colourstr[:-1]
+    colourstr = colourstr[:-1]      
     return colourstr + '"}\n'
 
 def test(client):
@@ -39,8 +39,9 @@ def test(client):
 def grantTurn():
     clientid = next(clientpool)
     print("Next: ", clientid)
-    client = clients[clientid]
-    client.send('{"turngranted":true}\n')
+    waitingclient = clients[clientid]
+    waitingclient.send('{"turngranted":true}\n')
+    
 
 class Receive(threading.Thread):
     def __init__(self, client, addr, id):
@@ -49,17 +50,22 @@ class Receive(threading.Thread):
             self.addr = addr
             self.clientid = id
     def run(self):
+        global isGameOn
         while True:
            incoming = self.client.recv(1024)
            print "----->", incoming
            data = json.loads(incoming)
            if data:
             if "start" in data: 
-                if playernumber >= 3:
-                    client.send('{"start": true}')
-                    grantTurn()
-                else:
-                    client.send('{"waiting":true}')
+                if not isGameOn:
+                    if playernumber >= 3:
+                        for key, client in clients.iteritems():
+                            client.send('{"startgame": true}\n')
+                        print("NOT IN FOR")
+                        isGameOn = True
+                        grantTurn()
+                    else:
+                        self.client.send('{"waiting":true}\n')
 
             else:
                     transitionstring = '{"transition" : true, "playerpositions": {"' + self.clientid +'": '+ incoming
@@ -77,7 +83,7 @@ servsocket.listen(4)
 colour = ""
 print "Parques Server Running..."
 while True:
-    if not maxplayers and not startgame:
+    if not maxplayers and not isGameOn:
         receivedcolours = False
         c, addr = servsocket.accept()
         colours = getColours(availablecolours)
