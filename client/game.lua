@@ -31,10 +31,10 @@ local otherPlayers = {}
 
 -----   Test Area ----------
 ----------------------------
-local otherplayersinfo = true
-local start = true
-local turn = true 
-local takePawn = true
+local otherplayersinfo = false
+local start = false
+local turn = false 
+local takePawn = false
 ----------------------------
 
 
@@ -211,6 +211,7 @@ function tapListener(event)
                         end 
                         if diea == 0 and dieb == 0 then
                             comms.sendinfo(player)
+                            turnText.alpha = 0
                             turn = false 
                             rolldice:setEnabled(false)
                             player.rolled = true
@@ -259,6 +260,7 @@ local function roll( event )
             else 
                 if timesRolled == 2 then 
                     turn = false
+                    turnText.alpha = 0
                     rolldice:setEnabled(false) 
                     timesRolled = 0 
                     comms.sendinfo(player)
@@ -347,7 +349,7 @@ local function processInfo()
                         start = true 
                         otherplayersinfo = true 
                     elseif message.waiting then 
-                        alert = native.showAlert( "Esperando", "Seugimos esperando a más jugadores.", { "OK" }, closeAlert )
+                        alert = native.showAlert( "Esperando", "Seguimos esperando a más jugadores.", { "OK" }, closeAlert )
                     end
                     
                 elseif start then 

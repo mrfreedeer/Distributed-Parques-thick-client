@@ -43,7 +43,10 @@ function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboar
 			print(player)
 			for i, pawn in ipairs(player) do 
 				pawnpos = positions[pawnstring..i]
+				print(pawnpos)
+				print("BOARD: ", globalboard)
 				tile = globalboard[pawnpos]
+				print("-->",tile)
 				transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
 		end
 	end

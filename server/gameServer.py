@@ -68,12 +68,14 @@ class Receive(threading.Thread):
                         self.client.send('{"waiting":true}\n')
 
             else:
-                    transitionstring = '{"transition" : true, "playerpositions": {"' + self.clientid +'": '+ incoming
-                    print transitionstring
-                    for key, client in clients.iteritems():
-                        if key != self.clientid: 
-                            client.send(transitionstring)
-                    grantTurn()
+                    if data["out"]:
+                        transitionstring = '{"transition" : true, "playerspositions": {"' + self.clientid +'": '+ incoming +'}}\n'
+                        print transitionstring
+                        for key, client in clients.iteritems():
+                            if key != self.clientid: 
+                                client.send(transitionstring)
+                        grantTurn()
+                    
                    
 
 servsocket = socket.socket()
