@@ -22,7 +22,7 @@ function communication.sendMessage(message)
     client:send(message)
 end
 
-function communication.sendinfo(player)
+function communication.sendinfo(player, jailing)
     local info = {}
     pawnpositions = '{'
     for i, pawn in ipairs(player) do
@@ -38,6 +38,9 @@ function communication.sendinfo(player)
         pawnpositions = pawnpositions .. '"out": true'
     else 
         pawnpositions = pawnpositions .. '"out": false'
+    end
+    if jailing ~= '' then 
+        pawnpositions = pawnpositions .. ", "..jailing 
     end
     pawnpositions = pawnpositions .. '}'
     client:send(pawnpositions)

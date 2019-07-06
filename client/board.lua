@@ -1,6 +1,17 @@
 local board = {}
 
-
+function board.resetPos(playercolour) 
+	if playercolour == "red" then
+		pos = 13
+	elseif playercolour == "yellow" then 
+		pos = 37
+	elseif playercolour == "blue" then
+		pos = 61
+	elseif playercolour == "green" then
+		pos = 85
+	end
+	return pos
+end 
 function board.drawOtherPlayers(playercolour)
 
 	playerset = {}
@@ -133,8 +144,8 @@ function board.transPlayable(pos, colour, lapenabled, actualpos)
 		end
 	end	
 	if colour == "yellow" then
-		if (pos>=1 and pos <=13) or (pos>=50 and pos <=61) or (pos>= 74 and pos <= 85)	then
-			if(actualpos<=8 and compareTwo(pos,1,13)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=74 and compareTwo(pos,74,85)) then
+		if (pos>1 and pos <=13) or (pos>=50 and pos <=61) or (pos>= 74 and pos <= 85)	then
+			if(actualpos<=96 and compareTwo(pos,1,13)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=74 and compareTwo(pos,74,85)) then
 				return pos + 7
 			end 
 		elseif pos>=34 and pos <=44 and lapenabled then
@@ -146,8 +157,8 @@ function board.transPlayable(pos, colour, lapenabled, actualpos)
 		end
 	end	
 	if colour == "blue" then
-		if (pos>=26 and pos <=37) or (pos>=1 and pos <=13) or (pos>= 74 and pos <= 85)	then
-			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 8 and compareTwo(pos,1,13)) or (actualpos<=74 and compareTwo(pos,74,85)) then
+		if (pos>=26 and pos <=37) or (pos>1 and pos <=13) or (pos>= 74 and pos <= 85)	then
+			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 96 and compareTwo(pos,1,13)) or (actualpos<=74 and compareTwo(pos,74,85)) then
 				return pos + 7
 			end 
 		elseif pos>=58 and pos <=68 and lapenabled then
@@ -159,8 +170,8 @@ function board.transPlayable(pos, colour, lapenabled, actualpos)
 		end
 	end	
 	if colour == "green" then
-		if (pos>=26 and pos <=37) or (pos>=50 and pos <=61) or (pos>= 1 and pos <= 13)	then
-			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=1 and compareTwo(pos,1,13)) then
+		if (pos>=26 and pos <=37) or (pos>=50 and pos <=61) or (pos> 1 and pos <= 13)	then
+			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=96 and compareTwo(pos,1,13)) then
 				return pos + 7
 			end 
 		elseif pos>=82 and pos <=92 and lapenabled then

@@ -31,6 +31,7 @@ local otherPlayers = {}
 local equaldice = false
 local testing = true
 pawnsOut = {}
+local jailedPawns = {}
 -----   Test Area ----------
 ----------------------------
 local otherplayersinfo = testing
@@ -44,6 +45,7 @@ player.name ="lolita"
 player.out = false
 player.colour = chosencolour
 player.rolled = false
+player.hasExitedBefore = false
 timesRolled = 0
 
 function tellHomeColour(player)
@@ -108,11 +110,65 @@ local function exitprison(player) --Salir de la prision
 
     print(player.name, " exitedprison")
     player.out = true
-    for i, pawn in ipairs(player) do
-        pawn.out = true
-        pawn.x = globalboard[pawn.pos].x
-        pawn.y = globalboard[pawn.pos].y
+    if not player.hasExitedBefore then 
+        for i, pawn in ipairs(player) do
+            pawn.out = true
+            pawn.x = globalboard[pawn.pos].x
+            pawn.y = globalboard[pawn.pos].y
+        end
+    else 
+        reset = resetPos(player)
+        for i, pawn in ipairs(player) do
+           if pawn.pos == reset then 
+                pawn.x = globalboard[pawn.pos].x
+                pawn.y = globalboard[pawn.pos].y
+           end 
+        end
     end 
+
+    player.hasExitedBefore = true
+end
+
+local function checkJailing(otherPlayers, player) 
+    playerpawns = {}
+    jailstring = '"jailedpawns":{'
+    jailpawnstring = ''
+    for _, pawn in ipairs(player) do 
+        table.insert(playerpawns, pawn.pos)
+    end 
+
+    for _, otherPlayer in ipairs(otherPlayers) do 
+        playerstr = otherPlayer.playerid
+        playerjailedpawns = ""
+        for i, otherPawn in ipairs(otherPlayer) do 
+            if table.indexOf(playerpawns, otherPawn.pos) ~= nil then 
+                playerjailedpawns = '"pawn'..i..'",'
+               otherPawn.pos = board.resetPos(otherPlayer.colour)
+               home = tellHomeColour(otherPlayer)
+               otherPawn.x = home.x
+               otherPawn.y = home.y
+            end 
+            lastchar = string.sub(playerjailedpawns, -1)
+            if lastchar == ',' then 
+                playerjailedpawns = playerjailedpawns:sub(1,-1)
+            end
+            if playerjailedpawns ~= "" then 
+             jailpawnstring= jailpawnstring .. '"..otherPlayer.playerid..":' .. '{' .. playerjailedpawns .. '},'
+            end 
+        end
+        
+    end 
+    if jailpawnstring ~= '' then 
+        print(jailpawnstring)
+        lastchar = string.sub(jailpawnstring, -1)
+        if lastchar == ',' then 
+            jailpawnstring = jailpawnstring:sub(1,-1)
+        end
+        jailstring = jailstring .. jailpawnstring
+        print("---Jailing: ", jailstring)
+    end
+    jailstring = jailstring  .. '}'
+    return jailstring
 end
 
 
@@ -190,9 +246,6 @@ function playertap(event)
             if player.rolled then
                 possibleMoves(event.target,diea, dieb)
                 tappedpawn = event.target
-                if equaldice then 
-                    player.rolled = false 
-                end
             end
         end
     end
@@ -227,8 +280,10 @@ function tapListener(event)
                         if diea == 0 and dieb == 0 then
                             if equaldice then
                                 rolldice:setEnabled(true)
+                                player.rolled = false
                             else
-                                comms.sendinfo(player)
+                                jailing = checkJailing(otherPlayers, player)
+                                comms.sendinfo(player, jailing)
                                 for _, removePawn in ipairs(pawnsToRemove) do 
                                     pawnindex = table.indexOf(player, removePawn)
                                     table.remove(player, pawnindex)
@@ -287,7 +342,7 @@ local function roll( event )
                     turnText.alpha = 0
                     rolldice:setEnabled(false) 
                     timesRolled = 0 
-                    comms.sendinfo(player)
+                    comms.sendinfo(player, "")
                 else 
                     timesRolled = timesRolled + 1
                 end
@@ -389,6 +444,16 @@ local function processInfo()
                         turn = true
                         turnText.alpha = 1
                         rolldice:setEnabled(true)  
+                    elseif message.jailed ~= nil then 
+                        print(message.jailed[player.playerid])
+                        if message.jailed[player.playerid] ~= nil then 
+                            for _, jailedpawn in ipairs(message.jailed[player.playerid]) do
+                                jailedpawn.pos = board.resetPos(player.colour)
+                                home = tellHomeColour(player)
+                                jailedpawn.x = home.x
+                                jailedpawn.y = home.y
+                            end 
+                        end 
                     end
                 end 
             end
