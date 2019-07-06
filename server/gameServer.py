@@ -74,7 +74,7 @@ class Receive(threading.Thread):
                         for key, client in clients.iteritems():
                             if key != self.clientid: 
                                 client.send(transitionstring)
-                        grantTurn()
+                    grantTurn()
                     
                    
 
@@ -94,15 +94,17 @@ while True:
             c.send(colours)
             ack = c.recv(1024)
             if ack == "true":
+                playeridstring = '{"playerid" : "' + playerstring + str(playernumber) + '"}\n'
+                c.send(playeridstring)
+                time.sleep(.2)
+                playerid = playerstring + str(playernumber)
                 colour = c.recv(1024)
+                chosencolours[playerid] = colour
                 availablecolours.remove(colour)
                 print("Current colours: ", availablecolours)
                 receivedcolours = True
 
-        playeridstring = '{"playerid" : "' + playerstring + str(playernumber) + '"}\n'
-        playerid = playerstring + str(playernumber)
-        chosencolours[playerid] = colour
-        c.send(playeridstring)
+      
         for key, client in clients.iteritems():
             newplayerstring ='{"newplayer":true, "playerid" : "'+ playerid + '", "colour" : "' + colour + '"}\n'
             allplayersforclient = '{"newplayer":true, "playerid" : "'+ key + '", "colour" : "' + chosencolours[key] + '"}\n'
