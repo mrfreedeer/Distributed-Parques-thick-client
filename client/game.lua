@@ -28,15 +28,17 @@ local blackies = {}
 local tappedpawn = nil
 turnText = {}
 local otherPlayers = {}
-
+local equaldice = false
+local testing = true
+pawnsOut = {}
 -----   Test Area ----------
 ----------------------------
-local otherplayersinfo = false
-local start = false
-local turn = false 
-local takePawn = false
+local otherplayersinfo = testing
+local start = testing
+local turn = testing 
+local takePawn = testing
 ----------------------------
-
+local pawnsToRemove = {}
 
 player.name ="lolita"
 player.out = false
@@ -80,7 +82,7 @@ function createplayer(player)
             circle.pos = 13
             circle:setFillColor(1,0,0)
         elseif player.colour == "yellow" then 
-            circle.pos = 35
+            circle.pos = 37
             circle:setFillColor(1,1,0)
         elseif player.colour == "blue" then
             circle:setFillColor(0,0,1)
@@ -125,19 +127,23 @@ local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posible
         if pawn.pos + total > greenlimit then
             if pawn.pos + diea > greenlimit then
                 validiea = pawn.pos + diea - greenlimit
+            else
+                validiea = pawn.pos + diea
             end
             if pawn.pos + dieb > greenlimit then
                 validieb = pawn.pos + dieb - greenlimit
+            else 
+                validieb = pawn.pos + dieb
             end
             validtotal = pawn.pos + total - greenlimit
-            validtotal = boardlib.transPlayable(validtotal, pawn.colour, pawn.lap)
-            validiea = boardlib.transPlayable(validiea, pawn.colour, pawn.lap)
-            validieb = boardlib.transPlayable(validieb, pawn.colour, pawn.lap)
+            validtotal = boardlib.transPlayable(validtotal, pawn.colour, pawn.lap, pawn.pos)
+            validiea = boardlib.transPlayable(validiea, pawn.colour, pawn.lap, pawn.pos)
+            validieb = boardlib.transPlayable(validieb, pawn.colour, pawn.lap, pawn.pos)
             pawn.validmoves = {validtotal, validiea, validieb}
         else
-            total = boardlib.transPlayable(pawn.pos + total, pawn.colour, pawn.lap)
-            validiea = boardlib.transPlayable(pawn.pos + diea, pawn.colour, pawn.lap)
-            validieb = boardlib.transPlayable(pawn.pos + dieb, pawn.colour, pawn.lap)
+            total = boardlib.transPlayable(pawn.pos + total, pawn.colour, pawn.lap, pawn.pos)
+            validiea = boardlib.transPlayable(pawn.pos + diea, pawn.colour, pawn.lap, pawn.pos)
+            validieb = boardlib.transPlayable(pawn.pos + dieb, pawn.colour, pawn.lap, pawn.pos)
             pawn.validmoves = {total, validiea, validieb}
         end
         print("Validmoves:")
@@ -149,6 +155,7 @@ local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posible
         print(cell)
             globalboard[cell]:setFillColor(.35,.2,.86)
         end
+        print("----ValidMoves----")
     end
 end
 
@@ -164,6 +171,8 @@ function restoreColour(pawn)
                 globalboard[cell]:setFillColor(0,0,1)
             elseif colour == "solidgreen" then 
                 globalboard[cell]:setFillColor(0,1,0)
+            elseif colour == "cyan" then 
+                globalboard[cell]:setFillColor(0,1,1)
             else 
                 globalboard[cell]:setFillColor(1,1,1)
             end 
@@ -181,6 +190,9 @@ function playertap(event)
             if player.rolled then
                 possibleMoves(event.target,diea, dieb)
                 tappedpawn = event.target
+                if equaldice then 
+                    player.rolled = false 
+                end
             end
         end
     end
@@ -189,6 +201,7 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
+    print(event.target.number)
     if turn then 
         pawn = tappedpawn
         if pawn ~= nil then
@@ -196,11 +209,13 @@ function tapListener(event)
                 for i, cell in ipairs(pawn.validmoves) do
                     tile = globalboard[cell]
                     if (event.target == tile) then
-                    transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+                        transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
                         pawn.pos = cell
                         restoreColour(pawn)
                         pawn.tapped = false
-
+                        if cell == 97 then
+                            table.insert(pawnsToRemove, pawn)
+                        end
                         if cell == pawn.validmoves[1] then
                             diea = 0
                             dieb = 0
@@ -210,11 +225,22 @@ function tapListener(event)
                             dieb = 0
                         end 
                         if diea == 0 and dieb == 0 then
-                            comms.sendinfo(player)
-                            turnText.alpha = 0
-                            turn = false 
-                            rolldice:setEnabled(false)
-                            player.rolled = true
+                            if equaldice then
+                                rolldice:setEnabled(true)
+                            else
+                                comms.sendinfo(player)
+                                for _, removePawn in ipairs(pawnsToRemove) do 
+                                    pawnindex = table.indexOf(player, removePawn)
+                                    table.remove(player, pawnindex)
+                                    removePawn:removeSelf()
+                                    table.insert(pawnsOut, pawnindex)
+                                end
+                                pawnsToRemove = {}
+                                turnText.alpha = 0
+                                turn = false 
+                                player.rolled = true
+                            end
+                            equaldice = false
                         end
                         return true
                     end
@@ -248,15 +274,13 @@ local function roll( event )
             print("---", player.out, timesRolled)
             if player.out then
                 if (diea == dieb) and (diea ~= nil) then
-                    if timesRolled == 2 then 
-                        takePawn = true
-                        timesRolled = 0 
-                    else 
-                        timesRolled = timesRolled + 1
-                    end
+                    equaldice = true
+                    timesRolled = timesRolled + 1
                 else 
-                player.rolled = true
+                    timesRolled = 0
                 end
+                player.rolled = true
+                rolldice:setEnabled(false)
             else 
                 if timesRolled == 2 then 
                     turn = false
@@ -269,7 +293,11 @@ local function roll( event )
                 end
             end
         end
+        if (diea == dieb) and dia ~= nil and timesRolled == 3 then 
+            takePawn = true
+        end 
         if (diea == dieb and diea ~= nil and not player.out) then
+            timesRolled = 0
             exitprison(player)
         end
     end
@@ -338,6 +366,7 @@ local function processInfo()
                 message = json.decode(data)
                 if not otherplayersinfo then
                     if message.newplayer ~=nil then
+                        print("NEWPLAYER")
                         newPlayerid = message.playerid 
                         newPlayer = boardlib.drawOtherPlayers(message.colour)
                         newPlayer.playerid = newPlayerid
@@ -377,7 +406,7 @@ function scene:create(event)
     skypos = boardlib.toScreen({0,-70},center)
     sky = display.newCircle(skypos[1], skypos[2],30)
     sky:setFillColor(0,1,1)
-
+    
     homegenpos = {-99,32}
     homeredpos = homegenpos
     homeredpos = boardlib.toScreen(homeredpos, center)
@@ -421,7 +450,7 @@ function scene:create(event)
     everything = display.newGroup()
 
     globalboard, blackies = boardlib.drawboard(everything, center)
-
+    table.insert(globalboard, sky)
     for i, tile in ipairs(globalboard) do
         tile:addEventListener("tap", tapListener)
     end

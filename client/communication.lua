@@ -26,10 +26,12 @@ function communication.sendinfo(player)
     local info = {}
     pawnpositions = '{'
     for i, pawn in ipairs(player) do
-        if i ~= 4 then
-            pawnpositions  =  pawnpositions .. '"pawn'.. i ..'":'.. pawn.pos .. ', '
-        else 
-            pawnpositions  =  pawnpositions .. '"pawn'.. i ..'":'.. pawn.pos .. ', '
+        if table.indexOf(pawnsOut, i) == nil then
+            if i ~= 4 then
+                pawnpositions  =  pawnpositions .. '"pawn'.. i ..'":'.. pawn.pos .. ', '
+            else 
+                pawnpositions  =  pawnpositions .. '"pawn'.. i ..'":'.. pawn.pos .. ', '
+            end
         end
     end
     if player.out then 

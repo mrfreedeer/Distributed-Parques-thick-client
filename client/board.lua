@@ -11,7 +11,7 @@ function board.drawOtherPlayers(playercolour)
 			circle.pos = 13
 			circle:setFillColor(1,0,0)
 		elseif circlecolour == "yellow" then 
-			circle.pos = 35
+			circle.pos = 37
 			circle:setFillColor(1,1,0)
 		elseif circlecolour == "blue" then
 			circle:setFillColor(0,0,1)
@@ -43,11 +43,16 @@ function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboar
 			print(player)
 			for i, pawn in ipairs(player) do 
 				pawnpos = positions[pawnstring..i]
-				print(pawnpos)
-				print("BOARD: ", globalboard)
-				tile = globalboard[pawnpos]
-				print("-->",tile)
-				transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+				if pawnpos ~= nil then
+					if pawnpos ~= 97 then
+						tile = globalboard[pawnpos]
+						transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+					else 
+						pawnindex = table.indexOf(player, pawn)
+						table.remove(player, pawnindex)
+						pawn:removeSelf()
+					end
+				end
 		end
 	end
 	return otherPlayers
@@ -96,46 +101,72 @@ function board.tellColour(pos)
 		return "solidblue"
 	elseif pos>=73 and pos<=80 then
 		return "solidgreen"
+	elseif pos == 97 then 
+		return "cyan"
 	else 
 		return "white"
 	end
 end
 
-function board.transPlayable(pos, colour, lapenabled)
-	print("POS: ", pos)
+function compareTwo(number, inferior, superior) 
+	if number >= inferior then 
+		if number <= superior then
+			return true
+		end 
+	end 
+	return false
+end
+
+function board.transPlayable(pos, colour, lapenabled, actualpos)
 	if colour == "red" then
-		print("trans",(pos>=25 and pos <=32) or (pos>=49 and pos <=56) or (pos>= 73 and pos <= 80))
-		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
-			return pos + 7
-		elseif pos>=9 and pos <=20 and lapenabled then
+		print("trans",(pos>=25 and pos <=37) or (pos>=49 and pos <=61) or (pos>= 73 and pos <= 85))
+		if (pos>=26 and pos <=37) or (pos>=50 and pos <=61) or (pos>= 74 and pos <= 85)	then
+			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=74 and compareTwo(pos,74,85)) then
+				return pos + 7
+			end 
+		elseif pos>=10 and pos <=20 and lapenabled then
 			return pos - 8
+		elseif pos==9 and lapenabled then
+			return 97
 		else
 			return pos
 		end
 	end	
 	if colour == "yellow" then
-		if (pos>=1 and pos <=8) or (pos>=50 and pos <=56) or (pos>= 74 and pos <= 80)	then
-			return pos + 7
-		elseif pos>=33 and pos <=44 and lapenabled then
+		if (pos>=1 and pos <=13) or (pos>=50 and pos <=61) or (pos>= 74 and pos <= 85)	then
+			if(actualpos<=8 and compareTwo(pos,1,13)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=74 and compareTwo(pos,74,85)) then
+				return pos + 7
+			end 
+		elseif pos>=34 and pos <=44 and lapenabled then
 			return pos - 32
+		elseif pos==33 and lapenabled then
+			return 97
 		else
 			return pos
 		end
 	end	
 	if colour == "blue" then
-		if (pos>=26 and pos <=32) or (pos>=1 and pos <=8) or (pos>= 74 and pos <= 80)	then
-			return pos + 7
-		elseif pos>=57 and pos <=68 and lapenabled then
+		if (pos>=26 and pos <=37) or (pos>=1 and pos <=13) or (pos>= 74 and pos <= 85)	then
+			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 8 and compareTwo(pos,1,13)) or (actualpos<=74 and compareTwo(pos,74,85)) then
+				return pos + 7
+			end 
+		elseif pos>=58 and pos <=68 and lapenabled then
 			return pos - 56
+		elseif pos==57 and lapenabled then
+			return 97
 		else
 			return pos
 		end
 	end	
 	if colour == "green" then
-		if (pos>=26 and pos <=32) or (pos>=50 and pos <=56) or (pos>= 1 and pos <= 80)	then
-			return pos + 7
-		elseif pos>=81 and pos <=92 and lapenabled then
+		if (pos>=26 and pos <=37) or (pos>=50 and pos <=61) or (pos>= 1 and pos <= 13)	then
+			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=1 and compareTwo(pos,1,13)) then
+				return pos + 7
+			end 
+		elseif pos>=82 and pos <=92 and lapenabled then
 			return pos - 80
+		elseif pos==81 and lapenabled then
+			return 97
 		else
 			return pos
 		end

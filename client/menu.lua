@@ -31,6 +31,7 @@ end
 
 local function getStartupInfo()
     local data, incoming = comms.receiveInfo()
+    print("---startup", data)
     if incoming then
         if data ~= nil then 
             message = json.decode(data)
@@ -54,9 +55,9 @@ local function getStartupInfo()
             end
         end
     end
-
     if gotId and gotColours then
         timer.cancel(startup)
+        gotoGame()
     end
 end
 
@@ -90,12 +91,10 @@ function scene:create(event)
     background.y = display.contentCenterY
 
     local serverText = display.newText(sceneGroup, "Ingresar dirección del servidor", display.contentCenterX, display.contentCenterY - 50, native.systemFont, 20 )
-    local serverField = native.newTextField(display.contentCenterX, display.contentCenterY - 20, 180, 30)
-    local gameText = display.newText(sceneGroup, "Jugar", display.contentCenterX, display.contentCenterY + 50, native.systemFont, 20 )
+    local serverField = native.newTextField(display.contentCenterX, display.contentCenterY, 180, 30)
     sceneGroup:insert(serverField)
     
     serverField: addEventListener("userInput", inputListener)
-    gameText:addEventListener("tap", gotoGame)
 end
 
 function scene:show( event )
