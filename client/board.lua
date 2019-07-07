@@ -26,7 +26,7 @@ function board.drawOtherPlayers(playercolour)
 			circle:setFillColor(1,1,0)
 		elseif circlecolour == "blue" then
 			circle:setFillColor(0,0,1)
-			circle.pos = 61
+			circle.pos = 13
 		elseif circlecolour == "green" then
 			circle:setFillColor(0,1,0)
 			circle.pos = 85
@@ -51,13 +51,13 @@ function board.transitionOtherPlayers(otherPlayers, playerspositions, globalboar
 	local pawnstring = "pawn"
 	for _, player in ipairs(otherPlayers) do
 			positions = playerspositions[player.playerid]
-			print(player)
 			for i, pawn in ipairs(player) do 
 				pawnpos = positions[pawnstring..i]
 				if pawnpos ~= nil then
 					if pawnpos ~= 97 then
 						tile = globalboard[pawnpos]
 						transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
+						pawn.pos = pawnpos
 					else 
 						pawnindex = table.indexOf(player, pawn)
 						table.remove(player, pawnindex)
@@ -82,7 +82,6 @@ function board.toCart(coords, center)
 end
 
 function board.enablelap(player) 
-	print(player.pos, player.lap)
 	if player.colour == "red" then
 		if player.pos>20 and not player.lap then
 			player.lap = true
@@ -130,7 +129,6 @@ end
 
 function board.transPlayable(pos, colour, lapenabled, actualpos)
 	if colour == "red" then
-		print("trans",(pos>=25 and pos <=37) or (pos>=49 and pos <=61) or (pos>= 73 and pos <= 85))
 		if (pos>=26 and pos <=37) or (pos>=50 and pos <=61) or (pos>= 74 and pos <= 85)	then
 			if(actualpos<=32 and compareTwo(pos,26,37)) or (actualpos <= 56 and compareTwo(pos,50,61)) or (actualpos<=74 and compareTwo(pos,74,85)) then
 				return pos + 7

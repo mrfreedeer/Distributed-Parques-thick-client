@@ -29,7 +29,7 @@ local tappedpawn = nil
 turnText = {}
 local otherPlayers = {}
 local equaldice = false
-local testing = true
+testing = false
 pawnsOut = {}
 local jailedPawns = {}
 -----   Test Area ----------
@@ -46,6 +46,7 @@ player.out = false
 player.colour = chosencolour
 player.rolled = false
 player.hasExitedBefore = false
+player.playerid = playerid
 timesRolled = 0
 
 function tellHomeColour(player)
@@ -117,9 +118,10 @@ local function exitprison(player) --Salir de la prision
             pawn.y = globalboard[pawn.pos].y
         end
     else 
-        reset = resetPos(player)
+        reset = boardlib.resetPos(player)
         for i, pawn in ipairs(player) do
            if pawn.pos == reset then 
+                pawn.out = true
                 pawn.x = globalboard[pawn.pos].x
                 pawn.y = globalboard[pawn.pos].y
            end 
@@ -133,36 +135,38 @@ local function checkJailing(otherPlayers, player)
     playerpawns = {}
     jailstring = '"jailedpawns":{'
     jailpawnstring = ''
+    print("---Player Pawns---")
     for _, pawn in ipairs(player) do 
         table.insert(playerpawns, pawn.pos)
+        print(pawn.pos)
     end 
-
+    print("------------------")
     for _, otherPlayer in ipairs(otherPlayers) do 
         playerstr = otherPlayer.playerid
         playerjailedpawns = ""
         for i, otherPawn in ipairs(otherPlayer) do 
+            print("->", otherPawn.pos)
             if table.indexOf(playerpawns, otherPawn.pos) ~= nil then 
-                playerjailedpawns = '"pawn'..i..'",'
-               otherPawn.pos = board.resetPos(otherPlayer.colour)
-               home = tellHomeColour(otherPlayer)
-               otherPawn.x = home.x
-               otherPawn.y = home.y
-            end 
-            lastchar = string.sub(playerjailedpawns, -1)
-            if lastchar == ',' then 
-                playerjailedpawns = playerjailedpawns:sub(1,-1)
-            end
-            if playerjailedpawns ~= "" then 
-             jailpawnstring= jailpawnstring .. '"..otherPlayer.playerid..":' .. '{' .. playerjailedpawns .. '},'
+                playerjailedpawns = playerjailedpawns .. otherPawn.pos ..','
+               otherPawn.pos = boardlib.resetPos(otherPlayer.colour)
+               otherhome = tellHomeColour(otherPlayer)
+               otherPawn.x = otherhome[1]
+               otherPawn.y = otherhome[2]
             end 
         end
+        lastchar = string.sub(playerjailedpawns, -1)
+        if lastchar == ',' then 
+            playerjailedpawns = playerjailedpawns:sub(1,-2)
+        end
+        if playerjailedpawns ~= "" then 
+         jailpawnstring= jailpawnstring .. '"'.. otherPlayer.playerid ..'":' .. '[' .. playerjailedpawns .. '],'
+        end 
         
     end 
     if jailpawnstring ~= '' then 
-        print(jailpawnstring)
         lastchar = string.sub(jailpawnstring, -1)
         if lastchar == ',' then 
-            jailpawnstring = jailpawnstring:sub(1,-1)
+            jailpawnstring = jailpawnstring:sub(1,-2)
         end
         jailstring = jailstring .. jailpawnstring
         print("---Jailing: ", jailstring)
@@ -241,8 +245,8 @@ end
 
 function playertap(event)
     if turn then
-        event.target.tapped = true  
-        if event.target.out then
+        event.target.tapped = true 
+        if event.target.out and player.out then
             if player.rolled then
                 possibleMoves(event.target,diea, dieb)
                 tappedpawn = event.target
@@ -254,7 +258,6 @@ function movehorizontal(player, tile)
     transition.moveTo(player, {x = tile.x, 500})
 end
 function tapListener(event)
-    print(event.target.number)
     if turn then 
         pawn = tappedpawn
         if pawn ~= nil then
@@ -347,13 +350,15 @@ local function roll( event )
                     timesRolled = timesRolled + 1
                 end
             end
-        end
-        if (diea == dieb) and dia ~= nil and timesRolled == 3 then 
-            takePawn = true
-        end 
-        if (diea == dieb and diea ~= nil and not player.out) then
-            timesRolled = 0
-            exitprison(player)
+
+            if (diea == dieb) and dia ~= nil and timesRolled == 3 and player.out then 
+                takePawn = true
+            end 
+            if (diea == dieb and diea ~= nil and not player.out) then
+                print("EXITPRISON")
+                timesRolled = 0
+                exitprison(player)
+            end
         end
     end
 
@@ -425,6 +430,7 @@ local function processInfo()
                         newPlayerid = message.playerid 
                         newPlayer = boardlib.drawOtherPlayers(message.colour)
                         newPlayer.playerid = newPlayerid
+                        newPlayer.colour = message.colour
                         table.insert(otherPlayers, newPlayer)
                         otherhomecolour = tellHomeColour(newPlayer)
                         drawInJail(newPlayer, otherhomecolour)
@@ -444,16 +450,41 @@ local function processInfo()
                         turn = true
                         turnText.alpha = 1
                         rolldice:setEnabled(true)  
-                    elseif message.jailed ~= nil then 
-                        print(message.jailed[player.playerid])
-                        if message.jailed[player.playerid] ~= nil then 
-                            for _, jailedpawn in ipairs(message.jailed[player.playerid]) do
-                                jailedpawn.pos = board.resetPos(player.colour)
-                                home = tellHomeColour(player)
-                                jailedpawn.x = home.x
-                                jailedpawn.y = home.y
+                    end
+                    if message.jailedpawns ~= nil then 
+                        player.out = false
+                        if message.jailedpawns[player.playerid] ~= nil then 
+                            print("GOT JAILED")
+                            for _, jailedpos in ipairs(message.jailedpawns[player.playerid]) do
+                                for z, pawn in ipairs(player) do 
+                                    if pawn.pos == jailedpos then 
+                                        pawn.out = false
+                                        pawn.pos = boardlib.resetPos(player.colour)
+                                        otherhome = tellHomeColour(player)
+                                        pawn.x = otherhome[1]
+                                        pawn.y = otherhome[2]
+                                    end 
+                                end
                             end 
-                        end 
+                            
+                        end
+                        
+                        for _, otherPlayer in ipairs(otherPlayers) do 
+        
+                            if message.jailedpawns[otherPlayer.playerid] ~= nil then 
+                                for j, jailedpos in ipairs(message.jailedpawns[otherPlayer.playerid]) do
+                                    for x, otherPawn in ipairs(otherPlayer) do 
+                                        if otherPawn.pos == jailedpos then 
+                                            otherPawn.pos = boardlib.resetPos(otherPlayer.colour)
+                                            otherhome = tellHomeColour(otherPlayer)
+                                            otherPawn.x = otherhome[1]
+                                            otherPawn.y = otherhome[2]
+                                        end 
+                                    end
+                                end
+                            end
+                        end
+
                     end
                 end 
             end
@@ -466,6 +497,7 @@ local s_loop = timer.performWithDelay(50, processInfo, -1)
 
 --------------------------------------------------
 function scene:create(event)
+
     local sceneGroup = self.view
         
     skypos = boardlib.toScreen({0,-70},center)
