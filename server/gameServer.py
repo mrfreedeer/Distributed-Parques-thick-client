@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 import time
+import re
 from itertools import cycle 
 
 availablecolours = ["red", "blue", "green", "yellow"]
@@ -16,7 +17,6 @@ playernumber = 1
 maxplayers = False
 isGameOn = False
 clientpool = cycle(clientsid)
-
 
 def getColours(availablecolours):
     colourstr = '{"colours": "'
@@ -73,11 +73,12 @@ class Receive(threading.Thread):
 
             else:
                     if data["out"]:
-                        self.client.send('{"jailedpawns": {"player1": [13]}}\n')
-                        if data["jailedpawns"]:
-                            transitionstring = '{"transition" : true, "jailedpawns":' + json.dumps(data["jailedpawns"]) +' "playerspositions": {"' + self.clientid +'": '+ incoming +'}}\n'
+                        if data["jailedpawns"]["anyjailed"]:
+                            regexresult = re.match('(.*?), "j',incoming).group()
+                            regexresult = regexresult[:-4]
+                            transitionstring = '{"transition" : true, "jailedpawns":' + json.dumps(data["jailedpawns"]) +', "playerspositions": {"' + self.clientid +'": '+ regexresult +'}}}\n'
                         else:
-                            transitionstring = '{"transition" : true, "jailedpawns": "playerspositions": {"' + self.clientid +'": '+ incoming +'}}\n'
+                            transitionstring = '{"transition" : true, "playerspositions": {"' + self.clientid +'": '+ incoming +'}}\n'
                         print transitionstring
                         for key, client in clients.iteritems():
                             if key != self.clientid: 
@@ -121,7 +122,7 @@ while True:
             client.send(newplayerstring)
             c.send(allplayersforclient)
 
-        test(c)
+        #test(c)
         playernumber += 1
         clients[playerid]= c
         clientsid.append(playerid)

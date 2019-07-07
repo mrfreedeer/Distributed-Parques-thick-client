@@ -146,7 +146,7 @@ local function checkJailing(otherPlayers, player)
         playerjailedpawns = ""
         for i, otherPawn in ipairs(otherPlayer) do 
             print("->", otherPawn.pos)
-            if table.indexOf(playerpawns, otherPawn.pos) ~= nil then 
+            if (table.indexOf(blackies,otherPawn.pos) == nil) and (table.indexOf(playerpawns, otherPawn.pos) ~= nil) then 
                 playerjailedpawns = playerjailedpawns .. otherPawn.pos ..','
                otherPawn.pos = boardlib.resetPos(otherPlayer.colour)
                otherhome = tellHomeColour(otherPlayer)
@@ -169,7 +169,10 @@ local function checkJailing(otherPlayers, player)
             jailpawnstring = jailpawnstring:sub(1,-2)
         end
         jailstring = jailstring .. jailpawnstring
+        jailstring = jailstring .. ',"anyjailed":true'
         print("---Jailing: ", jailstring)
+    else 
+        jailstring = jailstring .. '"anyjailed":false'
     end
     jailstring = jailstring  .. '}'
     return jailstring
@@ -452,8 +455,8 @@ local function processInfo()
                         rolldice:setEnabled(true)  
                     end
                     if message.jailedpawns ~= nil then 
-                        player.out = false
                         if message.jailedpawns[player.playerid] ~= nil then 
+                            player.out = false
                             print("GOT JAILED")
                             for _, jailedpos in ipairs(message.jailedpawns[player.playerid]) do
                                 for z, pawn in ipairs(player) do 

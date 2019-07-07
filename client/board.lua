@@ -26,7 +26,7 @@ function board.drawOtherPlayers(playercolour)
 			circle:setFillColor(1,1,0)
 		elseif circlecolour == "blue" then
 			circle:setFillColor(0,0,1)
-			circle.pos = 13
+			circle.pos = 61
 		elseif circlecolour == "green" then
 			circle:setFillColor(0,1,0)
 			circle.pos = 85
