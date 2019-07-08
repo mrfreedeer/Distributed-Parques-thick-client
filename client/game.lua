@@ -30,7 +30,7 @@ local pawnToTake = nil
 turnText = {}
 local otherPlayers = {}
 local equaldice = false
-testing = true
+testing = false
 pawnsOut = {}
 local jailedPawns = {}
 -----   Test Area ----------
