@@ -26,10 +26,11 @@ local greenlimit = 96
 local player = {}
 local blackies = {}
 local tappedpawn = nil
+local pawnToTake = nil
 turnText = {}
 local otherPlayers = {}
 local equaldice = false
-testing = false
+testing = true
 pawnsOut = {}
 local jailedPawns = {}
 -----   Test Area ----------
@@ -37,8 +38,8 @@ local jailedPawns = {}
 local otherplayersinfo = testing
 local start = testing
 local turn = testing 
-local takePawn = testing
 ----------------------------
+local takePawn = false
 local pawnsToRemove = {}
 
 player.name ="lolita"
@@ -222,32 +223,59 @@ local function possibleMoves(pawn, diea, dieb) --Calcula que movidas son posible
     end
 end
 
-function restoreColour(pawn) 
-    for i, cell in ipairs(pawn.validmoves) do
-        if table.indexOf(blackies, cell) == nil then
-            colour = boardlib.tellColour(cell)
-            if colour == "solidred" then
-                globalboard[cell]:setFillColor(1, 0, 0)
-            elseif colour == "solidyellow" then
-                globalboard[cell]:setFillColor(1,1,0)
-            elseif colour == "solidblue" then 
-                globalboard[cell]:setFillColor(0,0,1)
-            elseif colour == "solidgreen" then 
-                globalboard[cell]:setFillColor(0,1,0)
-            elseif colour == "cyan" then 
-                globalboard[cell]:setFillColor(0,1,1)
-            else 
-                globalboard[cell]:setFillColor(1,1,1)
-            end 
-        else 
-            globalboard[cell]:setFillColor(.2,.2,.2)
-        end
+function restoreColourBoard(pawn) 
+    if(pawn.validmoves ~= nil) then   
 
+        for i, cell in ipairs(pawn.validmoves) do
+            if table.indexOf(blackies, cell) == nil then
+                colour = boardlib.tellColour(cell)
+                if colour == "solidred" then
+                    globalboard[cell]:setFillColor(1, 0, 0)
+                elseif colour == "solidyellow" then
+                    globalboard[cell]:setFillColor(1,1,0)
+                elseif colour == "solidblue" then 
+                    globalboard[cell]:setFillColor(0,0,1)
+                elseif colour == "solidgreen" then 
+                    globalboard[cell]:setFillColor(0,1,0)
+                elseif colour == "cyan" then 
+                    globalboard[cell]:setFillColor(0,1,1)
+                else 
+                    globalboard[cell]:setFillColor(1,1,1)
+                end 
+            else 
+                globalboard[cell]:setFillColor(.2,.2,.2)
+            end
+
+        end
+    end
+end
+
+function restoreColourPlayer(player)
+    for _, pawn in ipairs(player) do
+        if player.colour == "red" then
+            pawn:setFillColor(1,0,0)
+        elseif player.colour == "yellow" then 
+            pawn:setFillColor(1,1,0)
+        elseif player.colour == "blue" then
+            pawn:setFillColor(0,0,1)
+        elseif player.colour == "green" then
+            pawn:setFillColor(0,1,0)
+        end
     end
 end
 
 function playertap(event)
-    if turn then
+
+    print("-->||", takePawn, "\t", player.out,"||<--")
+    if takePawn and player.out then 
+        restoreColourPlayer(player)
+        pawnToTake = event.target
+        event.target:setFillColor(.35,.2,.86)
+        event.target:toFront()
+    elseif turn then
+        for _,pawn in ipairs(player) do
+            restoreColourBoard(pawn)
+        end
         event.target.tapped = true 
         if event.target.out and player.out then
             if player.rolled then
@@ -270,7 +298,7 @@ function tapListener(event)
                     if (event.target == tile) then
                         transition.moveTo(pawn, {y = tile.y, 500, transition=easing.inOutExpo, onComplete = movehorizontal(pawn, tile)})
                         pawn.pos = cell
-                        restoreColour(pawn)
+                        restoreColourBoard(pawn)
                         pawn.tapped = false
                         if cell == 97 then
                             table.insert(pawnsToRemove, pawn)
@@ -353,9 +381,13 @@ local function roll( event )
                     timesRolled = timesRolled + 1
                 end
             end
-
-            if (diea == dieb) and dia ~= nil and timesRolled == 3 and player.out then 
+ 
+            if ((diea == dieb) and (diea ~= nil) and (timesRolled >= 3) and (player.out)) then 
+                print("TAKETHEPAWNOUT")
                 takePawn = true
+                selectPawn.isVisible = true
+                selectPawn:setEnabled(true)
+                takealert = native.showAlert( "Felicidades", "Puede elegir una de tus fichas para sacarla del juego.", { "Elegir ficha" }, closeAlert )
             end 
             if (diea == dieb and diea ~= nil and not player.out) then
                 print("EXITPRISON")
@@ -384,10 +416,27 @@ local function onComplete( event )
     end
 end
 
+
+function takePawnOut(event)
+    if ( "ended" == event.phase ) then
+        if pawnToTake ~= nil then 
+            takepawnindex = table.indexOf(player, pawnToTake)
+            table.remove(player, takepawnindex)
+            pawnToTake:removeSelf()
+            takePawn = false
+            pawnToTake = false
+            selectPawn.isVisible = false
+            selectPawn:setEnabled(false)
+            jailing = checkJailing(otherPlayers, player)
+            comms.sendinfo(player, jailing)
+        end
+    end
+end
+
 -- Boton creado (Tipo de Widget)
 rolldice = widget.newButton(
     {
-        width = 150,
+        width = 130,
         height = 20,
         defaultFile = "rollbutton.png",
         id = "rolldice",
@@ -410,10 +459,27 @@ startbutton = widget.newButton(
     }
 )
 
-rolldice.x = 93
+selectPawn = widget.newButton(
+    {
+        width = 160,
+        height = 25,
+        defaultFile = "select.png",
+        label = "Seleccionar ficha",
+        id = "select",
+        labelColor = { default={ 1, 1, 1, 1 }, over={ .2, .2, .2,.2} },
+        onEvent = takePawnOut,
+        isEnabled = false, 
+    }
+)
+
+
+selectPawn.isVisible = false
+rolldice.x = 83
 rolldice.y = halfH *2 -15
 startbutton.x = rolldice.x + 115
 startbutton.y = rolldice.y
+selectPawn.x = rolldice.x  + 150
+selectPawn.y = rolldice.y 
 testnum = 0
 
 
@@ -441,6 +507,7 @@ local function processInfo()
                         print("START")
                         start = true 
                         otherplayersinfo = true 
+                        startbutton.isVisible = false
                     elseif message.waiting then 
                         alert = native.showAlert( "Esperando", "Seguimos esperando a más jugadores.", { "OK" }, closeAlert )
                     end
